@@ -1,4 +1,4 @@
-export type GameEngine = "crash" | "mines" | "chicken" | "keno" | "roulette";
+export type GameEngine = "crash" | "mines" | "chicken" | "keno" | "fastkeno" | "roulette";
 
 export type Game = {
   slug: string;
@@ -16,11 +16,11 @@ export type Game = {
 export const GAMES: Game[] = [
   { slug: "sky-jet", name: "Sky Jet", engine: "crash", image: "/games/skyjet.jpg", category: "Crash", provider: "Zema Games Originals", badge: "HOT", accent: "#e11d48", crashTheme: "plane" },
   { slug: "chicken-road", name: "Chicken Road", engine: "chicken", image: "/games/chicken.jpg", category: "Instant", provider: "Zema Games Originals", badge: "NEW", accent: "#f59e0b" },
-  { slug: "fast-keno", name: "Fast Keno", engine: "keno", image: "/games/keno.jpg", category: "Keno", provider: "Zema Games Originals", accent: "#8b5cf6", kenoSpeed: 90 },
-  { slug: "keno", name: "Keno", engine: "keno", image: "/games/keno.jpg", category: "Keno", provider: "Zema Games Originals", badge: "TOP", accent: "#a855f7", kenoSpeed: 220 },
+  { slug: "fast-keno", name: "Fast Keno", engine: "fastkeno", image: "/games/keno.jpg", category: "Keno", provider: "Zema Games Originals", badge: "HOT", accent: "#4cc27e" },
+  { slug: "keno", name: "Keno", engine: "fastkeno", image: "/games/keno.jpg", category: "Keno", provider: "Zema Games Originals", badge: "TOP", accent: "#a855f7" },
   { slug: "mines", name: "Mines", engine: "mines", image: "/games/mines.jpg", category: "Instant", provider: "Zema Games Originals", badge: "HOT", accent: "#14b8a6" },
   { slug: "mini-roulette", name: "Mini Roulette", engine: "roulette", image: "/games/roulette.jpg", category: "Table", provider: "Zema Games Originals", accent: "#16a34a" },
-  { slug: "turbo-keno", name: "Turbo Keno", engine: "keno", image: "/games/keno.jpg", category: "Keno", provider: "Zema Games Originals", accent: "#ec4899", kenoSpeed: 25 },
+  { slug: "turbo-keno", name: "Turbo Keno", engine: "fastkeno", image: "/games/keno.jpg", category: "Keno", provider: "Zema Games Originals", accent: "#ec4899" },
   { slug: "avia-masters", name: "Avia Masters", engine: "crash", image: "/games/avia.jpg", category: "Crash", provider: "Zema Games Originals", badge: "NEW", accent: "#0ea5e9", crashTheme: "jet" },
 ];
 

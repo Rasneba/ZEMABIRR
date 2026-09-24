@@ -8,7 +8,7 @@ import { fmt } from "@/lib/brand";
 import Crash from "./Crash";
 import Mines from "./Mines";
 import Chicken from "./Chicken";
-import Keno from "./Keno";
+import FastKeno from "./FastKeno";
 import Roulette from "./Roulette";
 
 type Row = { id: number; bet: number; payout: number; multiplier: number; status: string; createdAt: string };
@@ -62,9 +62,9 @@ export default function GameView({ slug }: { slug: string }) {
       {game.engine === "crash" && <Crash key={game.slug} game={game} />}
       {game.engine === "mines" && <Mines />}
       {game.engine === "chicken" && <Chicken />}
-      {game.engine === "keno" && <Keno key={game.slug} game={game} />}
+      {game.engine === "fastkeno" && <FastKeno />}
       {game.engine === "roulette" && <Roulette game={game} />}
-      <MyBets key={`${tick}-${user?.balance}`} slug={slug} />
+      {game.engine !== "fastkeno" && <MyBets key={`${tick}-${user?.balance}`} slug={slug} />}
     </div>
   );
 }
