@@ -143,3 +143,22 @@ the "Leading indicators" table.
 
 > Verification: `npm run typecheck` and `npm run lint` clean, `npm run build`
 > succeeds. Bot token is git-ignored (`.env`) — never commit it.
+
+### 2.01 — Site bot menu: login / register / forgot / launch
+- **`scripts/tg-auth-bot.mjs`** (`npm run tg-bot`, uses `TELEGRAM_BOT_TOKEN`)
+  gives @ZemaGamesbot a persistent menu:
+  - **🔑 Login** — phone (typed or shared via `request_contact`) + password →
+    `/api/auth/telegram/claim` links the Telegram user to the player.
+  - **📝 Register** — phone + username + password → `/api/auth/telegram/register`
+    creates and links the account (age 21+ enforced).
+  - **🔓 Forgot Password** — phone shared via Telegram contact proves ownership
+    → `/api/auth/telegram/reset` sets a new password.
+  - **🚀 Open App** — web-app launch button (reply keyboard + bot menu button via
+    `setChatMenuButton`).
+- Once linked, opening the web app signs the user in automatically every time
+  (Mini App `initData` → `/api/auth/telegram`). `claim`/`reset` also clear any
+  auto-created "ghost" `tg:` account before binding the phone account.
+- New bot-only endpoints under `/api/auth/telegram/{claim,register,reset}` are
+  guarded by the `x-bot-key: <TELEGRAM_BOT_TOKEN>` header.
+- BotFather still needs the site-bot **Domain** → `zemabirr-rho.vercel.app`
+  (widget) and **Menu button URL** → `https://zemabirr-rho.vercel.app`.

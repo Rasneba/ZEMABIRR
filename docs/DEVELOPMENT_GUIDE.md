@@ -55,6 +55,10 @@ Browser ── fetch ──► /api/* route.ts ──► src/lib/* (business log
 | `/api/auth/register` | POST | create account (+251 phone validation) |
 | `/api/auth/login` | POST | verify password, create session |
 | `/api/auth/logout` | POST | destroy session |
+| `/api/auth/telegram` | POST | Mini App initData login/auto-register (bound users auto-login) |
+| `/api/auth/telegram/claim` | POST | bot "Login": phone+password → link Telegram (`x-bot-key`) |
+| `/api/auth/telegram/register` | POST | bot "Register": create + link account (`x-bot-key`) |
+| `/api/auth/telegram/reset` | POST | bot "Forgot": set new password after phone proof (`x-bot-key`) |
 | `/api/me` | GET | current user + referral stats |
 | `/api/health` | GET | `SELECT 1` connectivity check |
 | `/api/history` | GET | `?kind=tx\|games&game=` history |
@@ -149,6 +153,12 @@ To add a new game:
   in `sessions` table.
 - Phone format: normalised to `+251…`; must match `^[79]\d{8}$` (Ethiopian
   mobile). Username 3–20 chars, password ≥ 6 chars, age confirmation required ≥ 21.
+- **Telegram binding**: `users.telegram_id` links a Telegram account to a player.
+  Once linked, opening the web app as the Mini App auto-signs them in via
+  `initData` (`/api/auth/telegram`). The site bot (`npm run tg-bot`,
+  `scripts/tg-auth-bot.mjs`) drives Login/Register/Forgot using the
+  `/api/auth/telegram/{claim,register,reset}` endpoints, which require the
+  `x-bot-key` header matching `TELEGRAM_BOT_TOKEN`.
 
 ## 8. UI & styling conventions
 

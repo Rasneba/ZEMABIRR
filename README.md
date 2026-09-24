@@ -59,7 +59,24 @@ npm run typecheck    # tsc --noEmit
 npm run db:generate  # generate SQL migration from schema
 npm run db:migrate   # apply migrations
 npm run admin-bot    # run the admin Telegram deposit-approval bot
+npm run tg-bot       # run the site bot (login/register/forgot buttons + web-app launch)
 ```
+
+## Telegram bots
+
+**Site bot** (`npm run tg-bot`, uses `TELEGRAM_BOT_TOKEN`) gives players a menu
+in Telegram:
+
+- **🔑 Login** — phone + password; links the Telegram account to the player.
+- **📝 Register** — phone + username + password; creates and links an account.
+- **🔓 Forgot Password** — share the phone (confirming ownership), set a new one.
+- **🚀 Open App** — the web-app launch button (also the bot's menu button).
+
+Once linked, the player is **signed in automatically every time** they open the
+web app (Mini App `initData` → `/api/auth/telegram`), so login/register are
+one-time steps. Set the site-bot **Domain** and **Menu button URL** in BotFather
+(`/mybots` → bot → Bot Settings → Domain → `APP_URL` host; Menu Button → URL →
+`APP_URL`).
 
 ## Deposits & the admin bot
 

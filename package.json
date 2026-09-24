@@ -10,7 +10,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
-    "admin-bot": "node scripts/admin-bot.mjs"
+    "admin-bot": "node scripts/admin-bot.mjs",
+    "tg-bot": "node scripts/tg-auth-bot.mjs"
   },
   "dependencies": {
     "dotenv": "17.3.1",
