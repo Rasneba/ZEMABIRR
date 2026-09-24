@@ -65,7 +65,8 @@ Browser ── fetch ──► /api/* route.ts ──► src/lib/* (business log
 | `/api/games/crash` | POST | Sky Jet / Avia Masters (start/cashout/poll) |
 | `/api/games/chicken` | POST | Chicken Road (start/step/resume/cashout) |
 | `/api/games/mines` | POST | Mines (start/reveal/resume/cashout) |
-| `/api/games/instant` | POST | Keno ×4 + Mini Roulette (one-shot) |
+| `/api/games/instant` | POST | Keno / Turbo Keno + Mini Roulette (one-shot) |
+| `/api/games/fast-keno` | GET/POST | Fast Keno live round state (`?view=history\|results\|stats`), place ticket |
 | `/api/sports` | GET/POST | list/settle my bets, place bet |
 
 ## 3. Database (schema)

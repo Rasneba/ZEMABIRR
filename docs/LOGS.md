@@ -110,3 +110,10 @@ Live site inspected: `http://tolobirr.com` (Cassa.Bet-powered Next.js casino).
 ## How to log a new change
 Append under a new `## YYYY-MM-DD` heading, bump the minor version, and update
 the "Leading indicators" table.
+### 1.05 — Fast Keno rebuilt to match ToloBirr's Fast Keno
+- New engine `fastkeno` (`src/components/games/FastKeno.tsx`,
+  `src/lib/fastkeno.ts`, `src/lib/fastkeno-server.ts`,
+  `/api/games/fast-keno`): live shared rounds, 80 numbers / 20 balls, 60 s
+  countdown, draw stage with rings + glossy balls, GAME / HISTORY / RESULTS /
+  STATISTICS tabs, hot/cold dots, X2 / MAX / quick-pick, provably fair seeds.
+- Rules: docs/RULES.md §4.6. Classic Keno & Turbo Keno unchanged.

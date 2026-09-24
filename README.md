@@ -65,6 +65,8 @@ npm run db:migrate   # apply migrations
 |----------------|----------|-------------|
 | `DATABASE_URL` | **yes**  | PostgreSQL connection string (Neon pooler URL recommended) |
 | `NODE_ENV`     | yes      | `production` on Vercel |
+| `FAST_KENO_SECRET` | recommended | secret for provably-fair Fast Keno seeds (defaults to a hash of `DATABASE_URL`) |
+| `FAST_KENO_SIM_PLAYERS` | no | `0` hides simulated lobby tickets in Fast Keno |
 
 ## Configuration / brand
 
@@ -103,7 +105,8 @@ See [docs/DEVELOPMENT_GUIDE.md](docs/DEVELOPMENT_GUIDE.md) for the full walkthro
 ## Feature list
 
 - **Games** (8, multi-engine): Sky Jet (crash), Avia Masters (crash), Chicken
-  Road, Mines, Fast Keno / Keno / Turbo Keno, Mini Roulette.
+  Road, Mines, Fast Keno (live shared 80-ball rounds, provably fair), Keno /
+  Turbo Keno, Mini Roulette.
 - **Sports** betting: live + upcoming fixtures across 5 leagues, 1X2 & Over/Under
   2.5, accumulators, deterministic settlement.
 - **Wallet**: deposit (telebirr, CBE Birr, M-PESA, USDT), withdrawal, real vs

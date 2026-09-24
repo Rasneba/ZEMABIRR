@@ -67,7 +67,7 @@ Common stake range for games: **min Br 1, max Br 10,000**.
 - Hitting a mine = lost. Revealing all safe tiles = cleared (won).
 - Cash-out requires ≥ 1 tile revealed.
 
-### 4.4 Keno (Fast / Classic / Turbo)
+### 4.4 Keno (Classic / Turbo)
 - 40 numbers, 10 drawn. Pick 1–10 numbers. Bet range Br 1–10,000.
 - Payout table `KENO_PAYTABLE[picked][hits]` (see `src/lib/games.ts`); e.g.
   pick 1 → 3.8× on hit; pick 10 → up to 1000×. House edge varies per pick
@@ -78,6 +78,41 @@ Common stake range for games: **min Br 1, max Br 10,000**.
 - Total bet per round ≤ **Br 20,000**; per-spot min Br 1.
 - Red/black=1,3,5,8,10,12. `win = Σ (winning bet · payout)`, then
   `multiplier = win / total`.
+
+### 4.6 Fast Keno (shared live rounds — `/games/fast-keno`)
+- Board **1–80**, **20 balls** drawn per round. A ticket has **1–10 numbers**.
+  Stake **1–10,000 ETB**, up to **20 tickets per player per round**.
+- Everyone plays the **same round**. The round clock is derived from wall time
+  (`src/lib/fastkeno.ts`): **60 s betting → 20 s draw (1 ball/s) → 6 s results**
+  = 86 s cycle. Round id = `floor((now − epoch) / 86 s)`.
+- Bets are accepted only during the betting window (rejected < 0.5 s before
+  close). The stake is debited immediately (real balance first, then bonus).
+- Payout = stake × `FK_PAYTABLE[picked][hits]`; RTP is 94–96 % for every pick
+  size (hypergeometric 80/20):
+
+  | Picks | Pays (hits → ×) | RTP |
+  |---|---|---|
+  | 1 | 1→3.8 | 95.0 % |
+  | 2 | 1→1, 2→9.5 | 95.1 % |
+  | 3 | 2→2.5, 3→43 | 94.4 % |
+  | 4 | 2→1.5, 3→8, 4→92 | 94.7 % |
+  | 5 | 2→1, 3→3, 4→16, 5→350 | 94.2 % |
+  | 6 | 2→0.5, 3→2, 4→6, 5→75, 6→1000 | 94.6 % |
+  | 7 | 2→0.5, 3→1.5, 4→4, 5→17, 6→180, 7→1500 | 95.0 % |
+  | 8 | 3→1, 4→3, 5→10, 6→70, 7→800, 8→5000 | 95.8 % |
+  | 9 | 3→1, 4→2, 5→5, 6→25, 7→150, 8→2000, 9→8000 | 94.0 % |
+  | 10 | 3→1, 4→1.5, 5→3, 6→10, 7→70, 8→500, 9→3000, 10→10000 | 95.7 % |
+- **Provably fair**: `seed = HMAC-SHA256(FAST_KENO_SECRET, "fast-keno:<id>")`;
+  `sha256(seed)` is published while betting is open, the seed is revealed after
+  the draw (Results tab). Balls = Fisher–Yates over 1..80, step *i* uses
+  `parseInt(sha256(seed + ":" + i).slice(0, 8), 16) mod (80 − i)`.
+- **Settlement** is lazy and idempotent: finished tickets are paid the next time
+  the player calls `/api/me` or `/api/games/fast-keno` (atomic
+  `status = 'active'` guard in `settleRound`).
+- Hot (red dot) / cold (blue dot) numbers = most / least drawn over the last
+  50 rounds; Statistics tab uses the last 100 rounds.
+- The "All" feed mixes real tickets with **simulated lobby tickets** (display
+  only, never touch balances). Disable with `FAST_KENO_SIM_PLAYERS=0`.
 
 ## 5. Sports betting
 

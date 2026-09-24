@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,500;0,700;0,800;1,800;1,900&display=swap");
 @import "tailwindcss";
 
 @theme {
@@ -132,3 +133,72 @@ body {
 .animate-shake {
   animation: shake 0.5s ease-in-out infinite;
 }
+
+/* ---------------------------------------------------------------- Fast Keno */
+.fk {
+  --fk-bg: #1d2124;
+  --fk-panel: #2a2f33;
+  --fk-tile: #2f353a;
+  --fk-tile-hi: #3a4147;
+  --fk-num: #b9c0c4;
+  --fk-green: #4cc27e;
+  --fk-green-2: #3a9a62;
+  --fk-yellow: #f7dc3b;
+  background: var(--fk-bg);
+  font-family: "Roboto Condensed", "Arial Narrow", ui-sans-serif, system-ui, sans-serif;
+  font-stretch: condensed;
+}
+.fk-tile {
+  background: linear-gradient(180deg, #333a3f 0%, #2a3035 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 1px 0 rgba(0, 0, 0, 0.35);
+  color: var(--fk-num);
+}
+.fk-tile:hover:not(:disabled) { background: linear-gradient(180deg, #3b4348 0%, #31383d 100%); }
+.fk-tile-on {
+  background: linear-gradient(180deg, #5fd293 0%, #3aa767 100%);
+  color: #fff;
+  box-shadow: 0 0 10px rgba(76, 194, 126, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+.fk-bet-btn {
+  background: linear-gradient(180deg, #3f7d55 0%, #2c5a3d 55%, #234631 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  color: #fff;
+  transition: filter 0.15s, transform 0.1s;
+}
+.fk-bet-btn:hover:not(:disabled) { filter: brightness(1.12); }
+.fk-bet-btn:active:not(:disabled) { transform: translateY(1px); }
+.fk-bet-btn:disabled { color: rgba(255, 255, 255, 0.45); cursor: not-allowed; }
+.fk-ball {
+  background: radial-gradient(circle at 38% 30%, #6d8aa8 0%, #2a4460 22%, #10213a 55%, #060d18 85%);
+  box-shadow: inset 0 -4px 10px rgba(0, 0, 0, 0.6), 0 3px 8px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(120, 160, 200, 0.18);
+}
+.fk-ball-green {
+  background: radial-gradient(circle at 38% 30%, #b8ffd7 0%, #3fc07a 25%, #16704a 60%, #0a3a26 90%);
+  box-shadow: inset 0 -4px 10px rgba(0, 0, 0, 0.45), 0 0 18px rgba(76, 194, 126, 0.45), 0 0 0 2px rgba(120, 230, 170, 0.35);
+}
+.fk-ball-gloss {
+  position: absolute; left: 22%; top: 8%; width: 56%; height: 32%;
+  border-radius: 50%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0));
+}
+.fk-stage-glow { background: radial-gradient(ellipse at 50% 32%, rgba(40, 140, 105, 0.42) 0%, rgba(30, 90, 70, 0.14) 38%, transparent 68%); }
+.fk-timer-glow { background: radial-gradient(ellipse at 50% 50%, rgba(76, 194, 126, 0.28) 0%, transparent 70%); }
+@keyframes fk-spin { to { transform: rotate(360deg); } }
+@keyframes fk-spin-rev { to { transform: rotate(-360deg); } }
+.fk-spin { animation: fk-spin 24s linear infinite; transform-origin: 50% 50%; transform-box: fill-box; }
+.fk-spin-rev { animation: fk-spin-rev 32s linear infinite; transform-origin: 50% 50%; transform-box: fill-box; }
+.fk-spin-fast { animation: fk-spin 9s linear infinite; transform-origin: 50% 50%; transform-box: fill-box; }
+@keyframes fk-ball-in {
+  0% { transform: scale(0.25); opacity: 0.15; filter: blur(2px); }
+  55% { transform: scale(0.35); opacity: 0.35; filter: blur(1px); }
+  85% { transform: scale(1.07); opacity: 1; filter: none; }
+  100% { transform: scale(1); }
+}
+.fk-ball-in { animation: fk-ball-in 0.8s cubic-bezier(0.3, 0.7, 0.3, 1) both; }
+@keyframes fk-drop {
+  0% { transform: translateY(-40px) scale(1.6); opacity: 0; }
+  100% { transform: none; opacity: 1; }
+}
+.fk-drop { animation: fk-drop 0.35s ease-out both; }
+@keyframes fk-hit { 0% { transform: scale(0.7); } 60% { transform: scale(1.12); } 100% { transform: scale(1); } }
+.fk-hit { animation: fk-hit 0.35s ease-out; }
