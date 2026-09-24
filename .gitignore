@@ -31,3 +31,6 @@ scripts/.admin-bot-state.json
 
 # typescript
 *.tsbuildinfo
+
+# all local env files (tracked .env.example stays tracked)
+.env*
