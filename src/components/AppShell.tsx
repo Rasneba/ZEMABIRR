@@ -78,7 +78,7 @@ function SidebarContent({ onNav }: { onNav: () => void }) {
       </Link>
       <NavGroup title="Exclusive Features" links={FEATURE_LINKS} onNav={onNav} />
       <a href={BRAND.telegram} target="_blank" rel="noreferrer" className="flex items-center gap-3 rounded-xl bg-[#229ED9] px-4 py-3 text-sm font-bold text-white">
-        <span className="text-lg">✈️</span> Play on Telegram
+        <span className="text-lg">✈️</span> Open in Telegram
       </a>
       <NavGroup title="Support" links={SUPPORT_LINKS} onNav={onNav} />
     </div>

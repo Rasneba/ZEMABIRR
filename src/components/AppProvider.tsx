@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+import { bootTelegram, ensureTelegramSdk, getWebApp, requestPhoneNumber } from "@/lib/telegram";
 
 export type User = {
   id: number;
@@ -67,9 +68,39 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const t = setTimeout(refresh, 0);
-    return () => clearTimeout(t);
-  }, [refresh]);
+    let cancelled = false;
+    (async () => {
+      await ensureTelegramSdk();
+      const wa = getWebApp();
+      const telegram = Boolean(wa?.initData);
+      if (telegram) bootTelegram();
+
+      let d = await api<{ user: User | null }>("/api/me");
+      if (cancelled) return;
+
+      if (telegram && !d.user) {
+        const r = await api<{ ok?: boolean }>("/api/auth/telegram", { initData: wa!.initData });
+        if (cancelled) return;
+        if (r.ok) d = await api<{ user: User | null }>("/api/me");
+      }
+
+      if (cancelled) return;
+      setUser(d.user ?? null);
+      setLoading(false);
+
+      if (telegram && d.user && d.user.phone.startsWith("tg:") && !localStorage.getItem("zb_tg_phone")) {
+        localStorage.setItem("zb_tg_phone", "1");
+        const phone = await requestPhoneNumber();
+        if (cancelled || !phone) return;
+        await api("/api/auth/telegram", { initData: wa!.initData, phone });
+        const after = await api<{ user: User | null }>("/api/me");
+        if (!cancelled && after.user) setUser(after.user);
+      }
+    })().catch(() => setLoading(false));
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const toast = useCallback((text: string, kind: Toast["kind"] = "info") => {
     const id = Date.now() + Math.random();

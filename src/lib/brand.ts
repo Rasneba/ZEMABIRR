@@ -1,13 +1,13 @@
 export const BRAND = {
-  name: "ZemaBet",
+  name: "Zema Games",
   first: "Zema",
-  second: "Bet",
-  domain: "zemabet.com",
-  email: "support@zemabet.com",
-  telegram: "https://t.me/zemabet",
-  telegramSupport: "https://t.me/zemabet_support",
+  second: "Games",
+  domain: "zemagames.com",
+  email: "support@zemagames.com",
+  telegram: "https://t.me/zemagames",
+  telegramSupport: "https://t.me/zemagames_support",
   currency: "Br",
-  tagline: "Online Casino, Sports Betting & Crash Games",
+  tagline: "Online Casino, Sports & Mini Games",
 };
 
 export function fmt(n: number) {

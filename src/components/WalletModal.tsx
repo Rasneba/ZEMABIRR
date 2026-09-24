@@ -15,7 +15,8 @@ export function WalletForm({ mode, onDone }: { mode: "deposit" | "withdraw"; onD
   const { user, refresh, toast } = useApp();
   const [method, setMethod] = useState("telebirr");
   const [amount, setAmount] = useState(mode === "deposit" ? "100" : "");
-  const [account, setAccount] = useState(user ? "0" + user.phone.slice(4) : "");
+  const defaultAccount = user && !user.phone.startsWith("tg:") ? "0" + user.phone.slice(4) : "";
+  const [account, setAccount] = useState(defaultAccount);
   const [busy, setBusy] = useState(false);
   const m = PAY_METHODS.find((p) => p.id === method)!;
 

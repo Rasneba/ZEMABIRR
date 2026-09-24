@@ -1,8 +1,9 @@
-# ZemaBet — Online Casino, Sports Betting & Crash Games
+# Zema Games — Online Casino, Sports Betting & Crash Games
 
-ZemaBet (`zemabet.com`) is a full-featured online gaming platform cloned from
-[`www.tolobirr.com`](https://www.tolobirr.com/) and rebranded to the **ZemaBet**
-brand. Every original feature and business rule is reproduced: crash games,
+Zema Games (`zemagames.com`) is a full-featured online gaming platform cloned from
+[`www.tolobirr.com`](https://www.tolobirr.com/) and rebranded to the **Zema Games**
+brand. It runs as a **Telegram Mini App** with automatic Telegram login. Every
+original feature and business rule is reproduced: crash games,
 instant games, keno, roulette, sports betting, VIP club, promotions, daily
 lucky spin, Shamo lootboxes, referral program, wallet, and a full PostgreSQL
 backend.
@@ -61,10 +62,11 @@ npm run db:migrate   # apply migrations
 
 ## Environment variables
 
-| Variable       | Required | Description |
-|----------------|----------|-------------|
-| `DATABASE_URL` | **yes**  | PostgreSQL connection string (Neon pooler URL recommended) |
-| `NODE_ENV`     | yes      | `production` on Vercel |
+| Variable            | Required | Description |
+|---------------------|----------|-------------|
+| `DATABASE_URL`      | **yes**  | PostgreSQL connection string (Neon pooler URL recommended) |
+| `TELEGRAM_BOT_TOKEN`| **yes**  | Bot token from @BotFather — verifies Telegram Mini App login |
+| `NODE_ENV`          | yes      | `production` on Vercel |
 
 ## Configuration / brand
 
@@ -72,21 +74,22 @@ All branding is centralized in **one file**: `src/lib/brand.ts`
 
 ```ts
 export const BRAND = {
-  name: "ZemaBet",
+  name: "Zema Games",
   first: "Zema",
-  second: "Bet",      // boxed wordmark → Zema[BET]
-  domain: "zemabet.com",
-  email: "support@zemabet.com",
-  telegram: "https://t.me/zemabet",
-  telegramSupport: "https://t.me/zemabet_support",
+  second: "Games",    // boxed wordmark → Zema[GAMES]
+  domain: "zemagames.com",
+  email: "support@zemagames.com",
+  telegram: "https://t.me/zemagames",
+  telegramSupport: "https://t.me/zemagames_support",
   currency: "Br",      // Ethiopian Birr
-  tagline: "Online Casino, Sports Betting & Crash Games",
+  tagline: "Online Casino, Sports & Mini Games",
 };
 ```
 
 > Before go-live, replace the placeholder values (domain, email, telegram
 > handles) with your real ones — the URLs in `brand.ts` point at the hypothetical
-> ZemaBet handles.
+> Zema Games handles. Telegram login uses `TELEGRAM_BOT_TOKEN` (never commit it;
+> set it in Vercel with the `DATABASE_URL`).
 
 ## Deploying: Git + Neon + Vercel
 
@@ -122,4 +125,4 @@ tables, limits, anti-abuse rules) are documented in
 [**docs/RULES.md**](docs/RULES.md).
 
 ---
-*ZemaBet is a development clone. 21+. Play responsibly.*
+*Zema Games is a development clone. 21+. Play responsibly.*

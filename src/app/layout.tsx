@@ -7,8 +7,8 @@ import { BRAND } from "@/lib/brand";
 
 export const metadata: Metadata = {
   title: `${BRAND.name} — ${BRAND.tagline}`,
-  description: `${BRAND.name} (${BRAND.domain}) is your online casino and sports betting platform. Play Sky Jet, Keno, Mines, Chicken Road and more. Win, and enjoy rewards with our engaging gaming experience.`,
-  keywords: ["ZemaBet", "online casino Ethiopia", "sports betting", "crash games", "keno", "birr"],
+  description: `${BRAND.name} (${BRAND.domain}) is your Telegram Mini App for online casino and sports betting. Play Sky Jet, Keno, Mines, Chicken Road and more. Win, and enjoy rewards with our engaging gaming experience.`,
+  keywords: ["Zema Games", "online casino Ethiopia", "sports betting", "crash games", "keno", "birr", "Telegram Mini App"],
 };
 
 export const viewport: Viewport = {

@@ -13,6 +13,7 @@ export const users = pgTable(
   "users",
   {
     id: serial("id").primaryKey(),
+    telegramId: text("telegram_id"),
     phone: text("phone").notNull(),
     username: text("username").notNull(),
     passwordHash: text("password_hash").notNull(),
@@ -27,6 +28,7 @@ export const users = pgTable(
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
   (t) => [
+    uniqueIndex("users_telegram_idx").on(t.telegramId),
     uniqueIndex("users_phone_idx").on(t.phone),
     uniqueIndex("users_ref_idx").on(t.referralCode),
   ]

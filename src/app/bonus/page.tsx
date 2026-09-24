@@ -34,7 +34,7 @@ export default function BonusPage() {
 
       <div className="grid gap-3 sm:grid-cols-3">
         {[
-          { n: "1", t: "Create an account", d: "Sign up in seconds with your phone number." },
+          { n: "1", t: "Create an account", d: "Sign up in seconds with your Telegram." },
           { n: "2", t: "Make a deposit", d: "Use telebirr, CBE Birr, M-PESA or USDT. Min Br 10." },
           { n: "3", t: "Get 200% bonus", d: "Bonus is credited instantly to your bonus balance." },
         ].map((s) => (
