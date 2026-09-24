@@ -4,6 +4,12 @@ import { useEffect, useState } from "react";
 import { api, useApp } from "./AppProvider";
 import Logo from "./Logo";
 
+declare global {
+  interface Window {
+    onTelegramLogin?: (user: Record<string, unknown>) => void;
+  }
+}
+
 export default function AuthModal() {
   const { authMode, openAuth, refresh, toast } = useApp();
   const [phone, setPhone] = useState("");
@@ -13,6 +19,8 @@ export default function AuthModal() {
   const [age, setAge] = useState(true);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+  const [tgBot, setTgBot] = useState<string | null>(null);
+  const [tgBusy, setTgBusy] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -25,6 +33,45 @@ export default function AuthModal() {
     }, 0);
     return () => clearTimeout(t);
   }, [openAuth]);
+
+  useEffect(() => {
+    if (!authMode) return;
+    let cancelled = false;
+    (async () => {
+      const d = await api<{ botUsername?: string | null }>("/api/tg/config");
+      if (cancelled || !d.botUsername) return;
+      setTgBot(d.botUsername);
+      const holder = document.getElementById("zb-tg-widget");
+      if (!holder) return;
+      holder.innerHTML = "";
+      window.onTelegramLogin = (user) => void handleTgLogin(user);
+      const s = document.createElement("script");
+      s.async = true;
+      s.src = "https://telegram.org/js/telegram-widget.js?22";
+      s.setAttribute("data-telegram-login", d.botUsername);
+      s.setAttribute("data-size", "large");
+      s.setAttribute("data-radius", "10");
+      s.setAttribute("data-request-access", "write");
+      s.setAttribute("data-onauth", "onTelegramLogin(user)");
+      holder.appendChild(s);
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authMode]);
+
+  async function handleTgLogin(user: Record<string, unknown>) {
+    if (tgBusy) return;
+    setTgBusy(true);
+    setErr("");
+    const d = await api<{ ok?: boolean }>("/api/auth/telegram/widget", { user });
+    setTgBusy(false);
+    if (d.error) return setErr(d.error);
+    await refresh();
+    openAuth(null);
+    toast("Welcome! Logged in with Telegram", "success");
+  }
 
   if (!authMode) return null;
   const isLogin = authMode === "login";
@@ -60,6 +107,16 @@ export default function AuthModal() {
             </button>
           ))}
         </div>
+        {tgBot && (
+          <div className="mb-5">
+            <div id="zb-tg-widget" className="flex justify-center" />
+            <div className="my-4 flex items-center gap-3 text-xs text-mute">
+              <span className="h-px flex-1 bg-line" />
+              or continue with phone
+              <span className="h-px flex-1 bg-line" />
+            </div>
+          </div>
+        )}
         <form onSubmit={submit} className="space-y-3">
           <label className="block">
             <span className="mb-1 block text-xs text-mute">Phone number</span>

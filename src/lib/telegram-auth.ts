@@ -1,5 +1,5 @@
 import "server-only";
-import { createHmac, randomBytes, timingSafeEqual } from "crypto";
+import { createHash, createHmac, randomBytes, timingSafeEqual } from "crypto";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { users } from "@/db/schema";
@@ -58,6 +58,57 @@ export function verifyInitData(raw: string): TgUser | null {
   if (!userRaw) return null;
   try {
     return JSON.parse(decodeURIComponent(userRaw)) as TgUser;
+  } catch {
+    return null;
+  }
+}
+
+// Telegram Login Widget verification: secret_key = SHA256(bot_token),
+// data-check-string = all fields except `hash` sorted by key as `key=value` lines.
+export function verifyTgLogin(u: unknown): TgUser | null {
+  const botToken = process.env.TELEGRAM_BOT_TOKEN;
+  if (!botToken || !u || typeof u !== "object") return null;
+  const obj = u as Record<string, unknown>;
+  const hash = typeof obj.hash === "string" ? obj.hash : "";
+  if (!hash) return null;
+
+  const dataCheck = Object.keys(obj)
+    .filter((k) => k !== "hash")
+    .sort()
+    .map((k) => `${k}=${obj[k]}`)
+    .join("\n");
+  const secret = createHash("sha256").update(botToken).digest();
+  const computed = createHmac("sha256", secret).update(dataCheck).digest("hex");
+  const given = Buffer.from(hash, "hex");
+  const expected = Buffer.from(computed, "hex");
+  if (given.length === 0 || given.length !== expected.length || !timingSafeEqual(given, expected)) {
+    return null;
+  }
+
+  const now = Math.floor(Date.now() / 1000);
+  const authDate = Number(obj.auth_date);
+  if (!authDate || authDate < now - 86400 || authDate > now + 60) return null;
+
+  return {
+    id: Number(obj.id),
+    first_name: String(obj.first_name ?? ""),
+    last_name: typeof obj.last_name === "string" ? obj.last_name : undefined,
+    username: typeof obj.username === "string" ? obj.username : undefined,
+  };
+}
+
+// Cached bot public username (from getMe) so the web widget can render the button.
+let botUsernameCache: { username: string; at: number } | null = null;
+export async function getBotUsername(): Promise<string | null> {
+  if (botUsernameCache && Date.now() - botUsernameCache.at < 3600_000) return botUsernameCache.username;
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  if (!token) return null;
+  try {
+    const r = await fetch(`https://api.telegram.org/bot${token}/getMe`, { cache: "no-store" });
+    const d = (await r.json()) as { ok?: boolean; result?: { username?: string } };
+    const username = d.ok ? d.result?.username ?? null : null;
+    if (username) botUsernameCache = { username, at: Date.now() };
+    return username;
   } catch {
     return null;
   }
