@@ -8,6 +8,11 @@ export const BRAND = {
   telegramSupport: "https://t.me/zemagames_support",
   currency: "Br",
   tagline: "Online Casino, Sports & Mini Games",
+  telebirrMerchant: "0912009497",
+  depositMin: 10,
+  depositMax: 10000,
+  withdrawMin: 50,
+  withdrawMax: 30000,
 };
 
 export function fmt(n: number) {
@@ -42,11 +47,11 @@ export function vipFor(wagered: number) {
 export const FAQ = [
   {
     q: "How can I deposit funds?",
-    a: "We support telebirr, CBE Birr, M-Pesa and USDT (TRC20). Simply open your wallet, select 'Deposit', choose your preferred method, enter the amount and confirm. Funds are credited instantly.",
+    a: "We support telebirr, CBE Birr, M-Pesa and USDT (TRC20). Open your wallet, select 'Deposit', choose a payment method, then send the amount (Telebirr deposits go to 0912009497). After paying, enter the transaction ID from your SMS confirmation — an agent verifies the amount and transaction ID and credits your balance. Approved deposits also qualify for the first-deposit bonus.",
   },
   {
     q: "How do I withdraw my winnings?",
-    a: "You can withdraw your balance at any time. Navigate to the wallet section, click 'Withdraw', choose a method, enter your account number and the amount you wish to withdraw. Withdrawals are usually processed within minutes.",
+    a: "You can withdraw your balance at any time. Navigate to the wallet section, click 'Withdraw', choose a method, enter your account number and the amount you wish to withdraw. Withdrawals are processed after review.",
   },
   {
     q: "Are the games fair?",

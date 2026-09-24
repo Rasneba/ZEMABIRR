@@ -20,9 +20,15 @@ Authoritative reference for every rule enforced in the ZemaBet codebase
 
 - Display currency: **Br (Ethiopian Birr)**, 2 decimals.
 - Supported methods: `telebirr`, `cbebirr`, `mpesa`, `usdt`.
-- **Deposit**: min **Br 10**, max **Br 100,000**. Credited instantly to the
-  **real balance**.
-- **Withdrawal**: min **Br 50**, max **Br 50,000**; only from **real balance**
+- **Deposit**: min **Br 10**, max **Br 10,000**. Telebirr deposits are sent to
+  the merchant number **0912009497** (see `BRAND.telebirrMerchant`).
+- Deposits are **agent-approved**: the client submits the **transaction ID from
+  the payment SMS** (`txid`, min 6 chars) and the deposit is created as
+  `pending`. An agent (via `/admin` panel or the admin Telegram bot) checks that
+  the shared SMS shows the same **amount** and **transaction ID**, then
+  approves — only then is the amount credited to the **real balance**. Rejected
+  deposits stay unpaid (`status = rejected`).
+- **Withdrawal**: min **Br 50**, max **Br 30,000**; only from **real balance**
   (bonus balance is not withdrawable). Requires account/phone/wallet address
   (≥ 6 chars). Status set to `processing`.
 
@@ -94,8 +100,8 @@ Common stake range for games: **min Br 1, max Br 10,000**.
 ### Welcome bonus (200% first deposit)
 - One per player; matched **200% of first deposit, capped at Br 10,000**,
   credited to **bonus balance**.
-- Awarded atomically on the first deposit (`firstDepositDone` guard) — repeat
-  deposits get no bonus.
+- Awarded atomically on the **first approved deposit** (`firstDepositDone`
+  guard) — repeat deposits get no bonus.
 - Bonus funds are non-withdrawable; winnings earned from bonus balance land in
   the real balance.
 

@@ -67,6 +67,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setLoading(false);
   }, []);
 
+  const toast = useCallback((text: string, kind: Toast["kind"] = "info") => {
+    const id = Date.now() + Math.random();
+    setToasts((t) => [...t, { id, kind, text }]);
+    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 3500);
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -81,7 +87,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (telegram && !d.user) {
         const r = await api<{ ok?: boolean }>("/api/auth/telegram", { initData: wa!.initData });
         if (cancelled) return;
-        if (r.ok) d = await api<{ user: User | null }>("/api/me");
+        if (r.ok) {
+          d = await api<{ user: User | null }>("/api/me");
+          if (cancelled) return;
+          toast("To connect your phone, allow Telegram to share it", "info");
+        }
       }
 
       if (cancelled) return;
@@ -92,20 +102,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
         localStorage.setItem("zb_tg_phone", "1");
         const phone = await requestPhoneNumber();
         if (cancelled || !phone) return;
-        await api("/api/auth/telegram", { initData: wa!.initData, phone });
+        const r = await api<{ ok?: boolean }>("/api/auth/telegram", { initData: wa!.initData, phone });
         const after = await api<{ user: User | null }>("/api/me");
         if (!cancelled && after.user) setUser(after.user);
+        toast(r.ok ? "Account ready — welcome aboard!" : "Logged in with Telegram", "success");
       }
     })().catch(() => setLoading(false));
     return () => {
       cancelled = true;
     };
-  }, []);
-
-  const toast = useCallback((text: string, kind: Toast["kind"] = "info") => {
-    const id = Date.now() + Math.random();
-    setToasts((t) => [...t, { id, kind, text }]);
-    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 3500);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const setBalances = useCallback((balance?: number, bonus?: number) => {

@@ -2,19 +2,20 @@
 
 import { useState } from "react";
 import { api, useApp } from "./AppProvider";
-import { fmt } from "@/lib/brand";
+import { fmt, BRAND } from "@/lib/brand";
 
 export const PAY_METHODS = [
-  { id: "telebirr", name: "telebirr", color: "#0e9fe0", emoji: "📱", hint: "Phone number" },
-  { id: "cbebirr", name: "CBE Birr", color: "#7b2a8e", emoji: "🏦", hint: "CBE Birr phone number" },
-  { id: "mpesa", name: "M-PESA", color: "#16a34a", emoji: "💸", hint: "M-PESA phone number" },
-  { id: "usdt", name: "USDT (TRC20)", color: "#26a17b", emoji: "🪙", hint: "TRC20 wallet address" },
+  { id: "telebirr", name: "telebirr", color: "#0e9fe0", emoji: "📱", hint: "Your Telebirr number" },
+  { id: "cbebirr", name: "CBE Birr", color: "#7b2a8e", emoji: "🏦", hint: "Your CBE Birr phone number" },
+  { id: "mpesa", name: "M-PESA", color: "#16a34a", emoji: "💸", hint: "Your M-PESA phone number" },
+  { id: "usdt", name: "USDT (TRC20)", color: "#26a17b", emoji: "🪙", hint: "Your TRC20 wallet address" },
 ];
 
 export function WalletForm({ mode, onDone }: { mode: "deposit" | "withdraw"; onDone?: () => void }) {
   const { user, refresh, toast } = useApp();
   const [method, setMethod] = useState("telebirr");
   const [amount, setAmount] = useState(mode === "deposit" ? "100" : "");
+  const [txid, setTxid] = useState("");
   const defaultAccount = user && !user.phone.startsWith("tg:") ? "0" + user.phone.slice(4) : "";
   const [account, setAccount] = useState(defaultAccount);
   const [busy, setBusy] = useState(false);
@@ -23,12 +24,16 @@ export function WalletForm({ mode, onDone }: { mode: "deposit" | "withdraw"; onD
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    const d = await api<{ bonus?: number; reference?: string }>(`/api/wallet/${mode}`, { method, amount: Number(amount), account });
+    const payload = mode === "deposit" ? { method, amount: Number(amount), txid } : { method, amount: Number(amount), account };
+    const d = await api<{ bonus?: number; reference?: string; pending?: boolean }>(`/api/wallet/${mode}`, payload);
     setBusy(false);
     if (d.error) return toast(d.error, "error");
     await refresh();
     if (mode === "deposit") {
-      toast(`Deposit successful! Ref ${d.reference}${d.bonus ? ` · +${fmt(d.bonus)} welcome bonus 🎉` : ""}`, "success");
+      toast(
+        `Deposit requested · Ref ${d.reference}. Send Br ${amount} to Telebirr ${BRAND.telebirrMerchant} and wait for agent approval.`,
+        "success"
+      );
     } else {
       toast(`Withdrawal requested · Ref ${d.reference}`, "success");
     }
@@ -59,23 +64,53 @@ export function WalletForm({ mode, onDone }: { mode: "deposit" | "withdraw"; onD
           ))}
         </div>
       </div>
+
+      {mode === "deposit" && method === "telebirr" && (
+        <div className="rounded-xl border border-[#0e9fe0]/40 bg-[#0e9fe0]/10 p-3">
+          <div className="mb-1 flex items-center gap-2 text-xs text-mute">📱 Send via telebirr to</div>
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl font-black tracking-wide">{BRAND.telebirrMerchant}</span>
+            <span className="text-xs text-mute">Zema Games</span>
+          </div>
+          <p className="mt-1 text-xs text-mute">Send exactly <b className="text-white">{amount || 0} Br</b> — an SMS confirmation with a transaction ID will appear on your phone.</p>
+        </div>
+      )}
+
       <label className="block">
-        <span className="mb-1 block text-xs text-mute">{m.hint}</span>
-        <input className="input" value={account} onChange={(e) => setAccount(e.target.value)} required={mode === "withdraw"} />
-      </label>
-      <label className="block">
-        <span className="mb-1 block text-xs text-mute">Amount (Br) · {mode === "deposit" ? "min 10" : "min 50"}</span>
+        <span className="mb-1 block text-xs text-mute">Amount (Br) · {mode === "deposit" ? `min ${BRAND.depositMin} · max ${BRAND.depositMax.toLocaleString()}` : `min ${BRAND.withdrawMin} · max ${BRAND.withdrawMax.toLocaleString()}`}</span>
         <input className="input text-lg font-bold" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} required />
       </label>
+
+      {mode === "deposit" ? (
+        <>
+          <label className="block">
+            <span className="mb-1 block text-xs text-mute">Transaction ID from your SMS ✉️</span>
+            <input className="input uppercase" placeholder="e.g. TEL2412XXXXXX" value={txid} onChange={(e) => setTxid(e.target.value)} required />
+          </label>
+          {method !== "telebirr" && (
+            <p className="rounded-lg bg-bg px-3 py-2 text-xs text-mute">
+              After paying, enter the transaction ID from your payment confirmation. An agent will verify it and credit your balance.
+            </p>
+          )}
+        </>
+      ) : (
+        <label className="block">
+          <span className="mb-1 block text-xs text-mute">{m.hint}</span>
+          <input className="input" value={account} onChange={(e) => setAccount(e.target.value)} required />
+        </label>
+      )}
+
       <div className="grid grid-cols-3 gap-2">
         {(mode === "deposit" ? [50, 100, 200, 500, 1000, 5000] : [50, 100, 500, 1000, 2000, 5000]).map((v) => (
           <button type="button" key={v} onClick={() => setAmount(String(v))} className="btn-ghost rounded-lg py-2 text-sm">{v.toLocaleString()}</button>
         ))}
       </div>
       <button disabled={busy} className={`${mode === "deposit" ? "btn-gold" : "btn-green"} w-full rounded-xl py-3`}>
-        {busy ? "Processing…" : mode === "deposit" ? `Deposit Br ${amount || 0}` : `Withdraw Br ${amount || 0}`}
+        {busy ? "Processing…" : mode === "deposit" ? `Request deposit Br ${amount || 0}` : `Withdraw Br ${amount || 0}`}
       </button>
-      <p className="text-center text-[11px] text-mute">Demo cashier · transactions are simulated and credited instantly.</p>
+      <p className="text-center text-[11px] text-mute">
+        {mode === "deposit" ? "Deposits are verified by an agent using the SMS transaction ID before being credited." : "Withdrawals are processed after review."}
+      </p>
     </form>
   );
 }

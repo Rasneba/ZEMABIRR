@@ -2,12 +2,18 @@
 
 import { useEffect, useState } from "react";
 import { api, useApp } from "./AppProvider";
+import { getWebApp } from "@/lib/telegram";
 import Logo from "./Logo";
 
 declare global {
   interface Window {
     onTelegramLogin?: (user: Record<string, unknown>) => void;
   }
+}
+
+function getTgInitData() {
+  if (typeof window === "undefined") return null;
+  return getWebApp()?.initData ?? null;
 }
 
 export default function AuthModal() {
@@ -21,6 +27,34 @@ export default function AuthModal() {
   const [err, setErr] = useState("");
   const [tgBot, setTgBot] = useState<string | null>(null);
   const [tgBusy, setTgBusy] = useState(false);
+  const [tgInitData, setTgInitData] = useState<string | null>(null);
+
+  async function handleTgLogin(user: Record<string, unknown>) {
+    if (tgBusy) return;
+    setTgBusy(true);
+    setErr("");
+    const d = await api<{ ok?: boolean }>("/api/auth/telegram/widget", { user });
+    setTgBusy(false);
+    if (d.error) return setErr(d.error);
+    await refresh();
+    openAuth(null);
+    toast("Welcome! Logged in with Telegram", "success");
+  }
+
+  // Telegram Mini App path: the official Login Widget iframe is blocked inside
+  // the app webview, so authenticate straight with the initData instead.
+  async function continueWithTg() {
+    if (tgBusy) return;
+    setTgBusy(true);
+    setErr("");
+    if (!tgInitData) return setErr("Telegram session not available");
+    const d = await api<{ ok?: boolean }>("/api/auth/telegram", { initData: tgInitData });
+    setTgBusy(false);
+    if (d.error) return setErr(d.error);
+    await refresh();
+    openAuth(null);
+    toast("Welcome! Logged in with Telegram", "success");
+  }
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -37,41 +71,42 @@ export default function AuthModal() {
   useEffect(() => {
     if (!authMode) return;
     let cancelled = false;
-    (async () => {
-      const d = await api<{ botUsername?: string | null }>("/api/tg/config");
-      if (cancelled || !d.botUsername) return;
-      setTgBot(d.botUsername);
-      const holder = document.getElementById("zb-tg-widget");
-      if (!holder) return;
-      holder.innerHTML = "";
-      window.onTelegramLogin = (user) => void handleTgLogin(user);
-      const s = document.createElement("script");
-      s.async = true;
-      s.src = "https://telegram.org/js/telegram-widget.js?22";
-      s.setAttribute("data-telegram-login", d.botUsername);
-      s.setAttribute("data-size", "large");
-      s.setAttribute("data-radius", "10");
-      s.setAttribute("data-request-access", "write");
-      s.setAttribute("data-onauth", "onTelegramLogin(user)");
-      holder.appendChild(s);
-    })();
+    api<{ botUsername?: string | null }>("/api/tg/config").then((d) => {
+      if (cancelled) return;
+      if (d.botUsername) setTgBot(d.botUsername);
+    });
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authMode]);
 
-  async function handleTgLogin(user: Record<string, unknown>) {
-    if (tgBusy) return;
-    setTgBusy(true);
-    setErr("");
-    const d = await api<{ ok?: boolean }>("/api/auth/telegram/widget", { user });
-    setTgBusy(false);
-    if (d.error) return setErr(d.error);
-    await refresh();
-    openAuth(null);
-    toast("Welcome! Logged in with Telegram", "success");
-  }
+  // Mount-time so the Login Widget button is only rendered once the holder div
+  // actually exists in the DOM (fixes the widget silently failing to load).
+  useEffect(() => {
+    if (!authMode || !tgBot) return;
+    const holder = document.getElementById("zb-tg-widget");
+    if (!holder) return;
+    holder.innerHTML = "";
+    window.onTelegramLogin = (user) => void handleTgLogin(user);
+    const s = document.createElement("script");
+    s.async = true;
+    s.src = "https://telegram.org/js/telegram-widget.js?22";
+    s.setAttribute("data-telegram-login", tgBot);
+    s.setAttribute("data-size", "large");
+    s.setAttribute("data-radius", "10");
+    s.setAttribute("data-request-access", "write");
+    s.setAttribute("data-onauth", "onTelegramLogin(user)");
+    holder.appendChild(s);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authMode, tgBot]);
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setTgInitData(getTgInitData());
+      setErr("");
+    }, 0);
+    return () => clearTimeout(t);
+  }, [authMode]);
 
   if (!authMode) return null;
   const isLogin = authMode === "login";
@@ -107,9 +142,15 @@ export default function AuthModal() {
             </button>
           ))}
         </div>
-        {tgBot && (
+        {(tgBot || tgInitData) && (
           <div className="mb-5">
-            <div id="zb-tg-widget" className="flex justify-center" />
+            {tgBot ? (
+              <div id="zb-tg-widget" className="flex justify-center" />
+            ) : tgInitData ? (
+              <button type="button" onClick={continueWithTg} disabled={tgBusy} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#229ED9] px-4 py-3 text-sm font-bold text-white hover:brightness-110 disabled:opacity-60">
+                <span className="text-lg">✈️</span> {tgBusy ? "Signing in…" : "Continue with Telegram"}
+              </button>
+            ) : null}
             <div className="my-4 flex items-center gap-3 text-xs text-mute">
               <span className="h-px flex-1 bg-line" />
               or continue with phone

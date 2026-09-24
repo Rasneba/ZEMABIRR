@@ -8,7 +8,7 @@ export const FK = {
   maxPicks: 10, // numbers per ticket (1..10)
   betMs: 60_000, // betting window
   ballMs: 1_000, // one ball per second
-  resultMs: 6_000, // results shown before next round
+  resultMs: 4_000, // results shown before next round
   minBet: 1,
   maxBet: 10_000,
   maxTicketsPerRound: 20,

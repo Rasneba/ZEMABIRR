@@ -26,5 +26,8 @@ clone-website-with-rebranding (1)/
 # vercel
 .vercel
 
+# admin bot runtime state
+scripts/.admin-bot-state.json
+
 # typescript
 *.tsbuildinfo

@@ -58,7 +58,23 @@ npm run lint         # eslint
 npm run typecheck    # tsc --noEmit
 npm run db:generate  # generate SQL migration from schema
 npm run db:migrate   # apply migrations
+npm run admin-bot    # run the admin Telegram deposit-approval bot
 ```
+
+## Deposits & the admin bot
+
+Deposits are **agent-approved**. The client sends money (Telebirr → `0912009497`,
+see `BRAND.telebirrMerchant`), enters the **transaction ID from the payment SMS**
+and the deposit is queued as `pending`. An agent then:
+
+- approves via the **web panel** at `/admin` (enter `ADMIN_TOKEN`), or
+- approves straight from Telegram with `npm run admin-bot` — the bot posts new
+  pending deposits (amount + TX ID) to the agent chat and approves/rejects with
+  inline buttons.
+
+Approval is only accepted when the **amount and transaction ID match** the
+original request. Approving credits the real balance and applies the
+first-deposit 200% bonus / referral reward.
 
 ## Environment variables
 
@@ -66,6 +82,10 @@ npm run db:migrate   # apply migrations
 |---------------------|----------|-------------|
 | `DATABASE_URL`      | **yes**  | PostgreSQL connection string (Neon pooler URL recommended) |
 | `TELEGRAM_BOT_TOKEN`| **yes**  | Bot token from @BotFather — verifies Telegram Mini App login |
+| `ADMIN_BOT_TOKEN`   | no       | Bot token for the admin deposit-approval bot (`npm run admin-bot`) |
+| `ADMIN_TOKEN`       | *yes (for approvals)* | Shared passcode for `/admin` panel + `/api/admin/*` |
+| `ADMIN_CHAT_ID`     | no       | Restrict the admin bot to one Telegram chat id |
+| `APP_URL`           | no       | Site root the admin bot polls (use the deployed URL in prod) |
 | `NODE_ENV`          | yes      | `production` on Vercel |
 
 ## Configuration / brand
@@ -109,8 +129,9 @@ See [docs/DEVELOPMENT_GUIDE.md](docs/DEVELOPMENT_GUIDE.md) for the full walkthro
   Road, Mines, Fast Keno / Keno / Turbo Keno, Mini Roulette.
 - **Sports** betting: live + upcoming fixtures across 5 leagues, 1X2 & Over/Under
   2.5, accumulators, deterministic settlement.
-- **Wallet**: deposit (telebirr, CBE Birr, M-PESA, USDT), withdrawal, real vs
-  bonus balance, transaction ledger.
+- **Wallet**: deposit (telebirr, CBE Birr, M-PESA, USDT — agent-approved with
+  SMS transaction-ID verification), withdrawal, real vs bonus balance,
+  transaction ledger.
 - **Bonuses & promos**: 200% first-deposit welcome bonus, daily promotion codes,
   free daily Lucky Spin, Shamo lootboxes (bronze/silver/gold).
 - **VIP Club**: Explorer → Diamond, weekly cashback up to 12%.

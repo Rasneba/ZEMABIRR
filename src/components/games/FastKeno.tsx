@@ -199,7 +199,7 @@ function DrawStage({ drawn, total, phase, myPicks, myWin, myStake, nextIn, round
         </div>
       )}
       {phase === "result" && (
-        <div className="absolute inset-x-0 top-5 flex flex-col items-center text-center">
+        <div className="fk-result-pop absolute inset-x-0 top-5 flex flex-col items-center text-center">
           <div className="text-lg font-bold uppercase tracking-wider text-white/50">Round {roundId} finished</div>
           {myStake > 0 ? (
             myWin > 0 ? (

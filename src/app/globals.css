@@ -194,11 +194,17 @@ body {
   85% { transform: scale(1.07); opacity: 1; filter: none; }
   100% { transform: scale(1); }
 }
-.fk-ball-in { animation: fk-ball-in 0.8s cubic-bezier(0.3, 0.7, 0.3, 1) both; }
+.fk-ball-in { animation: fk-ball-in 0.45s cubic-bezier(0.3, 0.7, 0.3, 1) both; }
 @keyframes fk-drop {
   0% { transform: translateY(-40px) scale(1.6); opacity: 0; }
   100% { transform: none; opacity: 1; }
 }
-.fk-drop { animation: fk-drop 0.35s ease-out both; }
+.fk-drop { animation: fk-drop 0.22s ease-out both; }
+@keyframes fk-result-pop {
+  0% { transform: translateY(10px) scale(0.92); opacity: 0; }
+  55% { transform: translateY(0) scale(1.04); opacity: 1; }
+  100% { transform: none; opacity: 1; }
+}
+.fk-result-pop { animation: fk-result-pop 0.3s cubic-bezier(0.2, 0.8, 0.3, 1.2) both; }
 @keyframes fk-hit { 0% { transform: scale(0.7); } 60% { transform: scale(1.12); } 100% { transform: scale(1); } }
 .fk-hit { animation: fk-hit 0.35s ease-out; }

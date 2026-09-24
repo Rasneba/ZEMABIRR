@@ -8,10 +8,10 @@ export async function POST(req: Request) {
   const user = await getCurrentUser();
   if (!user) return unauthorized();
   const body = await req.json().catch(() => ({}));
-  const amount = parseAmount(body.amount, 50, 50000);
+  const amount = parseAmount(body.amount, 50, 30000);
   const method = String(body.method ?? "");
   const account = String(body.account ?? "").trim();
-  if (!amount) return json({ error: "Withdrawal must be between Br 50 and Br 50,000" }, 400);
+  if (!amount) return json({ error: "Withdrawal must be between Br 50 and Br 30,000" }, 400);
   if (!METHODS.includes(method)) return json({ error: "Choose a withdrawal method" }, 400);
   if (account.length < 6) return json({ error: "Enter a valid account / phone / wallet address" }, 400);
   const res = await debitReal(user.id, amount);

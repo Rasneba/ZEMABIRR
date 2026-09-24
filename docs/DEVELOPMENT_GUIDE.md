@@ -43,6 +43,7 @@ Browser ── fetch ──► /api/* route.ts ──► src/lib/* (business log
 | `/promo` | `src/app/promo/page.tsx` | client (promos + coupon codes) |
 | `/referral` | `src/app/referral/page.tsx` | client (invite & earn) |
 | `/wallet` | `src/app/wallet/page.tsx` | client (deposit/withdraw/history) |
+| `/admin` | `src/app/admin/page.tsx` | client (agent deposit approval, needs `ADMIN_TOKEN`) |
 | `/profile` | `src/app/profile/page.tsx` | client |
 | `/support` | `src/app/support/page.tsx` | RSC (help, contact, responsible gaming) |
 | `/terms` `/privacy` | `src/app/terms/page.tsx` etc. | RSC (static legal) |
@@ -57,8 +58,11 @@ Browser ── fetch ──► /api/* route.ts ──► src/lib/* (business log
 | `/api/me` | GET | current user + referral stats |
 | `/api/health` | GET | `SELECT 1` connectivity check |
 | `/api/history` | GET | `?kind=tx\|games&game=` history |
-| `/api/wallet/deposit` | POST | add funds (+welcome bonus/referral logic) |
+| `/api/wallet/deposit` | POST | queue agent-approved deposit (pending + SMS txid) |
 | `/api/wallet/withdraw` | POST | debit real balance (processing tx) |
+| `/api/admin/deposits` | GET | list deposits (`?status=pending\|all`), `Authorization: Bearer <ADMIN_TOKEN>` |
+| `/api/admin/deposits/approve` | POST | credit only when amount + SMS txid match (`src/lib/deposits.ts`) |
+| `/api/admin/deposits/reject` | POST | mark deposit rejected |
 | `/api/promo` | POST | redeem promo code (bonus balance) |
 | `/api/spin` | POST | 24h free spin, weighted prize |
 | `/api/lootbox` | POST | open Shamo box |

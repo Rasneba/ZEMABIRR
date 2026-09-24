@@ -110,3 +110,36 @@ Live site inspected: `http://tolobirr.com` (Cassa.Bet-powered Next.js casino).
 ## How to log a new change
 Append under a new `## YYYY-MM-DD` heading, bump the minor version, and update
 the "Leading indicators" table.
+
+---
+
+## 2026-09-24 — Live fixes: Telegram login, keno result, limits, agent-approved deposits
+
+### 2.00 — Fixes (this commit)
+- **Telegram auto-login**: fixed the Login Widget race in `AuthModal` that made
+  the widget silently fail to load (the holder div was queried before React had
+  re-rendered `tgBot`). Split the fetch → render → script-inject into two
+  effects. Added a "Continue with Telegram" fallback using Mini App `initData`
+  (works where the widget iframe is blocked) and boot toasts in `AppProvider`
+  for auto-registration and phone binding.
+- **Keno result popup**: shorter Fast Keno result phase (`resultMs` 6s → 4s),
+  faster ball reveal/drop to match, and a quick pop-in animation
+  (`.fk-result-pop`) for the "You won / No win" result block.
+- **Wallet limits**: deposit **max Br 100,000 → Br 10,000**; withdrawal
+  **max Br 50,000 → Br 30,000** (routes, UI hints, quick buttons, RULES.md).
+- **Telebirr deposit number**: the deposit form now shows the merchant number
+  **0912009497** (`BRAND.telebirrMerchant`) and the exact amount to send.
+- **Agent-approved deposits**: `POST /api/wallet/deposit` now creates a
+  `pending` transaction with the client's **SMS transaction ID** instead of
+  crediting instantly. Approval (`/api/admin/deposits`, `approve`, `reject`,
+  share of `src/lib/deposits.ts`) only credits when **amount + transaction ID
+  match**. Bonus/referral logic moved to approval time.
+- **Admin panel**: new `/admin` page (passcode = `ADMIN_TOKEN`) listing deposits
+  with approve/reject, amount + TX ID shown for cross-checking.
+- **Admin Telegram bot**: `scripts/admin-bot.mjs` (`npm run admin-bot`) notifies
+  the agent chat of pending deposits and approves/rejects via inline buttons.
+  Configured `ADMIN_BOT_TOKEN`, `ADMIN_TOKEN`, `ADMIN_CHAT_ID`, `APP_URL` in
+  `.env` / `.env.example`.
+
+> Verification: `npm run typecheck` and `npm run lint` clean, `npm run build`
+> succeeds. Bot token is git-ignored (`.env`) — never commit it.
