@@ -21,6 +21,12 @@ import {
 type Tab = "game" | "history" | "results" | "stats";
 const money = (n: number) => n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const BET_STEPS = [1, 2, 4, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 5000, 10000];
+const DURATION_OPTIONS = [
+  { value: 30_000, label: "30 seconds" },
+  { value: 60_000, label: "1 minute" },
+  { value: 120_000, label: "2 minutes" },
+];
+const DEFAULT_DRAW_MS = 60_000;
 function randomPicks(k: number) {
   const pool = Array.from({ length: FK.numbers }, (_, i) => i + 1);
   const out: number[] = [];
@@ -180,7 +186,7 @@ function DrawStage({ drawn, total, phase, myPicks, myWin, myStake, nextIn, round
     <div className="relative h-[300px] overflow-hidden">
       <div className="fk-stage-glow absolute inset-0" />
       <svg viewBox="0 0 400 300" className="absolute inset-0 h-full w-full" preserveAspectRatio="xMidYMin slice" aria-hidden>
-        <g fill="none" stroke="#2f7a55" strokeLinecap="round">
+        <g fill="none" stroke="var(--fk-green)" strokeLinecap="round">
           <circle cx="200" cy="78" r="44" strokeOpacity=".55" strokeWidth="1.5" />
           <circle className="fk-spin-fast" cx="200" cy="78" r="62" strokeOpacity=".5" strokeWidth="2" strokeDasharray="120 40 60 30" />
           <circle className="fk-spin-rev" cx="200" cy="78" r="92" strokeOpacity=".45" strokeWidth="3" strokeDasharray="160 50 90 70" />
@@ -248,41 +254,55 @@ export default function FastKeno() {
   const [lastPicks, setLastPicks] = useState<number[]>([]);
   const paidRound = useRef<number | null>(null);
 
-  const [history, setHistory] = useState<FkHistoryRow[] | null>(null);
+const [history, setHistory] = useState<FkHistoryRow[] | null>(null);
   const [results, setResults] = useState<FkResultRow[] | null>(null);
   const [stats, setStats] = useState<FkStats | null>(null);
   const [openResult, setOpenResult] = useState<number | null>(null);
+
+  const [drawMs, setDrawMs] = useState<number>(() => {
+    if (typeof window === "undefined") return DEFAULT_DRAW_MS;
+    const saved = Number(window.localStorage.getItem("zk_draw_ms"));
+    return Number.isFinite(saved) && saved > 0 ? saved : DEFAULT_DRAW_MS;
+  });
+  const changeDuration = (v: number) => {
+    setDrawMs(v);
+    localStorage.setItem("zk_draw_ms", String(v));
+  };
 
   const load = useCallback(async () => {
     if (inflight.current) return;
     inflight.current = true;
     lastLoad.current = Date.now();
     const t0 = Date.now();
-    const d = await api<FkState>("/api/games/fast-keno");
+    const d = await api<FkState>(`/api/games/fast-keno?drawMs=${drawMs}`);
     const t1 = Date.now();
     inflight.current = false;
     if (d.error || !d.round) return;
     offset.current = d.now - (t0 + t1) / 2;
     setSt(d);
-  }, []);
+  }, [drawMs]);
 
   // clock + initial load
   useEffect(() => {
-    const first = setTimeout(load, 0);
     const clock = setInterval(() => setNow(Date.now() + offset.current), 100);
     const poll = setInterval(() => {
       if (document.visibilityState === "visible") load();
     }, 2500);
     return () => {
-      clearTimeout(first);
       clearInterval(clock);
       clearInterval(poll);
     };
   }, [load]);
 
+  // (re)load on mount and when the draw duration changes
+  useEffect(() => {
+    const t = setTimeout(load, 0);
+    return () => clearTimeout(t);
+  }, [load]);
+
   const round = st?.round;
-  const phase = round ? fkPhase(round.id, now) : "betting";
-  const revealed = round ? (phase === "result" ? FK.draw : fkRevealed(round.id, now)) : 0;
+  const phase = round ? fkPhase(round.id, now, round.drawMs) : "betting";
+  const revealed = round ? (phase === "result" ? FK.draw : fkRevealed(round.id, now, round.drawMs)) : 0;
   const drawnVisible = useMemo(() => (round ? round.drawn.slice(0, revealed) : []), [round, revealed]);
   const drawnSet = useMemo(() => new Set(drawnVisible), [drawnVisible]);
   const myTickets = useMemo(() => st?.my.tickets ?? [], [st]);
@@ -296,7 +316,7 @@ export default function FastKeno() {
   // Phase transitions → fetch fresh state right away (round data, draw, seed).
   useEffect(() => {
     if (!round || !now) return;
-    const stale = fkRoundIdAt(now) !== round.id || (phase !== "betting" && round.drawn.length === 0) || (phase === "result" && !round.seed);
+    const stale = fkRoundIdAt(now, round.drawMs) !== round.id || (phase !== "betting" && round.drawn.length === 0) || (phase === "result" && !round.seed);
     if (stale && Date.now() - lastLoad.current > 700) {
       const t = setTimeout(load, 0);
       return () => clearTimeout(t);
@@ -366,11 +386,12 @@ export default function FastKeno() {
       return openWallet("deposit");
     }
     setBusy(true);
-    const d = await api<{ ticket: FkTicket & { round: number }; balance: number; bonusBalance: number }>("/api/games/fast-keno", { picks, bet: amount, round: round.id });
+    const d = await api<{ ticket: FkTicket & { round: number }; balance: number; bonusBalance: number }>("/api/games/fast-keno", { picks, bet: amount, round: round.id, drawMs: round.drawMs });
     setBusy(false);
     if (d.error) return toast(d.error, "error");
     setBalances(d.balance, d.bonusBalance);
     setLastPicks(picks);
+    setPicks([]);
     toast(`Ticket accepted · Round ${d.ticket.round} · ${money(amount)} ${FK.currency}`, "success");
     load();
   }
@@ -437,7 +458,7 @@ export default function FastKeno() {
           {/* info card */}
           <div className="relative mx-2.5 mt-1.5 overflow-hidden rounded-xl bg-[var(--fk-panel)] sm:ml-[74px]">
             <svg viewBox="0 0 300 120" className="pointer-events-none absolute inset-0 h-full w-full" preserveAspectRatio="xMidYMid slice" aria-hidden>
-              <g fill="none" stroke="#3a7a5a" strokeOpacity=".3" strokeWidth="3">
+              <g fill="none" stroke="var(--fk-green)" strokeOpacity=".3" strokeWidth="3">
                 <circle cx="210" cy="95" r="70" strokeDasharray="120 40" />
                 <circle cx="210" cy="95" r="110" strokeDasharray="200 60" strokeOpacity=".18" />
               </g>
@@ -504,7 +525,7 @@ export default function FastKeno() {
             <button onClick={() => setBetNum(user ? Math.max(FK.minBet, Math.min(FK.maxBet, Math.floor(balance * 100) / 100)) : FK.maxBet)} className="h-[60px] w-[clamp(48px,14vw,72px)] shrink-0 rounded-lg bg-[var(--fk-panel)] text-[clamp(16px,5.2vw,24px)] font-medium text-[var(--fk-green)] sm:w-[72px]" style={{ fontFamily: "ui-sans-serif, system-ui" }}>MAX</button>
             <button onClick={() => { setGear((g) => !g); setMenu(false); }} className={`grid h-[60px] w-[clamp(48px,14vw,72px)] shrink-0 place-items-center rounded-lg text-[var(--fk-green)] ${gear ? "bg-[#34403d]" : "bg-[var(--fk-panel)]"}`} aria-label="Options">{Ico.gear}</button>
             {gear && (
-              <div className="absolute bottom-[68px] right-2.5 z-30 w-[300px] rounded-xl bg-[#2a2f33] p-3 shadow-2xl ring-1 ring-white/10">
+              <div className="absolute bottom-[68px] right-2.5 z-30 w-[320px] rounded-xl bg-[#2a2f33] p-3 shadow-2xl ring-1 ring-white/10">
                 <div className="mb-1.5 text-base font-bold uppercase text-white/60">Quick pick</div>
                 <div className="grid grid-cols-5 gap-1">
                   {Array.from({ length: FK.maxPicks }, (_, i) => i + 1).map((k) => (
@@ -515,6 +536,13 @@ export default function FastKeno() {
                   <button onClick={() => { setPicks([]); setGear(false); }} className="h-10 rounded-md bg-white/5 text-base font-bold text-white/80 hover:bg-white/10">Clear</button>
                   <button disabled={!lastPicks.length} onClick={() => { setPicks(lastPicks); setGear(false); }} className="h-10 rounded-md bg-white/5 text-base font-bold text-white/80 hover:bg-white/10 disabled:opacity-40">Repeat last</button>
                 </div>
+                <div className="mb-1.5 mt-3 text-base font-bold uppercase text-white/60">Draw duration</div>
+                <div className="grid grid-cols-3 gap-1">
+                  {DURATION_OPTIONS.map((o) => (
+                    <button key={o.value} onClick={() => changeDuration(o.value)} className={`h-10 rounded-md text-sm font-bold ${drawMs === o.value ? "fk-tile-on" : "fk-tile"}`}>{o.label}</button>
+                  ))}
+                </div>
+                <p className="mt-2 text-xs text-white/50">How long it takes to draw all {FK.draw} balls. The round schedule follows your choice.</p>
               </div>
             )}
           </div>

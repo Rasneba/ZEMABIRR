@@ -22,6 +22,7 @@ export const GAMES: Game[] = [
   { slug: "mini-roulette", name: "Mini Roulette", engine: "roulette", image: "/games/roulette.jpg", category: "Table", provider: "Zema Games Originals", accent: "#16a34a" },
   { slug: "turbo-keno", name: "Turbo Keno", engine: "fastkeno", image: "/games/keno.jpg", category: "Keno", provider: "Zema Games Originals", accent: "#ec4899" },
   { slug: "avia-masters", name: "Avia Masters", engine: "crash", image: "/games/avia.jpg", category: "Crash", provider: "Zema Games Originals", badge: "NEW", accent: "#0ea5e9", crashTheme: "jet" },
+  { slug: "aviator", name: "Aviator", engine: "crash", image: "/games/avia.jpg", category: "Crash", provider: "Spribe", badge: "NEW", accent: "#f43f5e", crashTheme: "plane" },
 ];
 
 export const getGame = (slug: string) => GAMES.find((g) => g.slug === slug);

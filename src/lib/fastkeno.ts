@@ -7,7 +7,7 @@ export const FK = {
   draw: 20, // balls drawn per round
   maxPicks: 10, // numbers per ticket (1..10)
   betMs: 60_000, // betting window
-  ballMs: 1_000, // one ball per second
+  ballMs: 1_000, // one ball per second (base speed)
   resultMs: 4_000, // results shown before next round
   minBet: 1,
   maxBet: 10_000,
@@ -17,33 +17,50 @@ export const FK = {
   epoch: Date.UTC(2026, 7, 16, 0, 0, 0),
 } as const;
 
-export const FK_DRAW_MS = FK.draw * FK.ballMs;
-export const FK_CYCLE_MS = FK.betMs + FK_DRAW_MS + FK.resultMs;
+// Base per-ball draw speed (ms). Set FAST_KENO_DRAW_MS to change globally, e.g.
+// 3000 = 60s draw. Users can also pick a draw duration in-game (see FK_DRAW_OPTIONS_MS).
+export const DRAW_SPEED_MS = Number(process.env.FAST_KENO_DRAW_MS ?? FK.ballMs);
+
+// Default total draw duration in ms (base schedule everyone falls back to).
+export const FK_DRAW_MS = FK.draw * DRAW_SPEED_MS;
+
+// Allowed user-selectable draw durations (total ms): 30s, 1m, 2m.
+export const FK_DRAW_OPTIONS_MS = [30_000, 60_000, 120_000];
+
+/** Snap a requested total draw duration to the nearest allowed option (or the base). */
+export function fkNormalizeDrawMs(v: unknown, fallback = FK_DRAW_MS) {
+  const n = Number(v);
+  if (!Number.isFinite(n) || n <= 0) return fallback;
+  return FK_DRAW_OPTIONS_MS.reduce((a, b) => (Math.abs(b - n) < Math.abs(a - n) ? b : a), FK_DRAW_OPTIONS_MS[0]);
+}
+
+export const fkCycleMs = (drawMs = FK_DRAW_MS) => FK.betMs + drawMs + FK.resultMs;
 
 export type FkPhase = "betting" | "drawing" | "result";
 
-export function fkRoundTimes(id: number) {
-  const start = FK.epoch + id * FK_CYCLE_MS;
+export function fkRoundTimes(id: number, drawMs = FK_DRAW_MS) {
+  const cycle = fkCycleMs(drawMs);
+  const start = FK.epoch + id * cycle;
   const betEnd = start + FK.betMs;
-  const drawEnd = betEnd + FK_DRAW_MS;
-  const end = start + FK_CYCLE_MS;
+  const drawEnd = betEnd + drawMs;
+  const end = start + cycle;
   return { id, start, betEnd, drawEnd, end };
 }
 
-export const fkRoundIdAt = (t: number) => Math.floor((t - FK.epoch) / FK_CYCLE_MS);
+export const fkRoundIdAt = (t: number, drawMs = FK_DRAW_MS) => Math.floor((t - FK.epoch) / fkCycleMs(drawMs));
 
-export function fkPhase(id: number, t: number): FkPhase {
-  const r = fkRoundTimes(id);
+export function fkPhase(id: number, t: number, drawMs = FK_DRAW_MS): FkPhase {
+  const r = fkRoundTimes(id, drawMs);
   if (t < r.betEnd) return "betting";
   if (t < r.drawEnd) return "drawing";
   return "result";
 }
 
-/** How many balls are visible at time t (0..20). */
-export function fkRevealed(id: number, t: number) {
-  const r = fkRoundTimes(id);
+/** How many balls are visible at time t (0..20) for a round drawn over `drawMs`. */
+export function fkRevealed(id: number, t: number, drawMs = FK_DRAW_MS) {
+  const r = fkRoundTimes(id, drawMs);
   if (t < r.betEnd) return 0;
-  return Math.min(FK.draw, Math.floor((t - r.betEnd) / FK.ballMs) + 1);
+  return Math.min(FK.draw, Math.floor((t - r.betEnd) / (drawMs / FK.draw)) + 1);
 }
 
 // Payout multipliers: FK_PAYTABLE[picked][hits]. RTP ≈ 94–96 % for every pick size
@@ -83,6 +100,7 @@ export type FkRoundInfo = {
   betEnd: number;
   drawEnd: number;
   end: number;
+  drawMs: number; // total draw duration in ms used for this round's schedule
   hash: string; // sha256(seed) — committed before the draw
   drawn: number[]; // empty while betting
   seed: string | null; // revealed once the draw has finished

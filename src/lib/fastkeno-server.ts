@@ -6,6 +6,7 @@ import { gameRounds, users } from "@/db/schema";
 import { settleRound } from "./rounds";
 import {
   FK,
+  FK_DRAW_MS,
   FK_PAYTABLE,
   fkHits,
   fkMultiplier,
@@ -130,7 +131,7 @@ function simTickets(id: number): SimTicket[] {
 // ---------------------------------------------------------------- tickets
 const mask = (u: string) => (u.length <= 2 ? `${u[0] ?? "*"}***` : `${u[0]}***${u[u.length - 1]}`).toLowerCase();
 
-type TicketState = { round: number; picks: number[]; drawn?: number[]; hits?: number };
+type TicketState = { round: number; picks: number[]; drawMs?: number; drawn?: number[]; hits?: number };
 
 export async function fkRoundTickets(id: number) {
   return db
@@ -143,8 +144,8 @@ export async function fkRoundTickets(id: number) {
 }
 
 /** Feed for a round: real tickets merged with simulated lobby tickets visible at `now`. */
-export async function fkFeed(id: number, now: number, userId: number | null, limit = 40) {
-  const r = fkRoundTimes(id);
+export async function fkFeed(id: number, now: number, userId: number | null, drawMs = FK_DRAW_MS, limit = 40) {
+  const r = fkRoundTimes(id, drawMs);
   const real = await fkRoundTickets(id);
   const realT = real.map((t) => ({
     id: String(t.id),
@@ -174,7 +175,10 @@ export async function fkSettleUser(userId: number) {
   const now = Date.now();
   for (const t of active) {
     const st = t.state as TicketState;
-    if (fkRoundTimes(st.round).drawEnd > now) continue;
+    // Each ticket stores the draw duration its round ran with, so a user who
+    // switches duration between rounds still settles exactly on schedule.
+    const drawMs = Number(st.drawMs) > 0 ? Number(st.drawMs) : FK_DRAW_MS;
+    if (fkRoundTimes(st.round, drawMs).drawEnd > now) continue;
     const drawn = fkDraw(st.round);
     const hits = fkHits(st.picks, drawn);
     const mult = fkMultiplier(st.picks.length, hits);
