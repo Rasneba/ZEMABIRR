@@ -10,6 +10,7 @@ export async function POST(req: Request) {
   const phone = `+251${digits}`;
   const [u] = await db.select().from(users).where(eq(users.phone, phone)).limit(1);
   if (!u || !verifyPassword(password, u.passwordHash)) return json({ error: "Invalid phone number or password" }, 401);
+  if (u.banned === 1) return json({ error: "This account has been suspended. Contact support." }, 403);
   await createSession(u.id);
   return json({ ok: true });
 }

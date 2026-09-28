@@ -93,6 +93,25 @@ Approval is only accepted when the **amount and transaction ID match** the
 original request. Approving credits the real balance and applies the
 first-deposit 200% bonus / referral reward.
 
+## Admin panel
+
+`/admin` (passcode `ADMIN_TOKEN`) is the full production control center:
+
+- **Dashboard** — players, deposits, withdrawals, wagered, GGR, sports
+  exposure + 14-day charts.
+- **Deposits / Withdrawals** — approve/reject deposits (SMS cross-check);
+  mark withdrawals *paid* or *reject* (auto-refund).
+- **Players** — search, profile, manual balance adjustments (ledgered),
+  ban/unban (kills sessions instantly).
+- **Games** — per-game wagered/paid/GGR/RTP + full round audit feed.
+- **Sports** — exposure, tickets, one-click settle of due bets.
+- **Ledger / Promos** — full transaction history and promo-code management.
+
+All endpoints live under `/api/admin/*` (`Authorization: Bearer <ADMIN_TOKEN>`);
+see `docs/DEVELOPMENT_GUIDE.md` § 9b. Local panel development:
+`node scripts/local-pg.mjs` (embedded Postgres) + `node scripts/seed-demo.mjs`
+(demo dataset).
+
 ## Environment variables
 
 | Variable            | Required | Description |

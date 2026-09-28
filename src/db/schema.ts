@@ -24,6 +24,8 @@ export const users = pgTable(
     referredBy: integer("referred_by"),
     referralPaid: integer("referral_paid").notNull().default(0),
     firstDepositDone: integer("first_deposit_done").notNull().default(0),
+    banned: integer("banned").notNull().default(0),
+    banReason: text("ban_reason"),
     lastSpinAt: timestamp("last_spin_at"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },

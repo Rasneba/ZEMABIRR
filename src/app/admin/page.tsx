@@ -1,174 +1,155 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { adminCall, clearToken, getToken, setToken } from "@/components/admin/api";
+import Dashboard from "@/components/admin/Dashboard";
+import Deposits from "@/components/admin/Deposits";
+import Withdrawals from "@/components/admin/Withdrawals";
+import Users from "@/components/admin/Users";
+import Games from "@/components/admin/Games";
+import Transactions from "@/components/admin/Transactions";
+import Promos from "@/components/admin/Promos";
+import Sports from "@/components/admin/Sports";
 
-type Deposit = {
-  id: number;
-  userId: number;
-  username: string;
-  phone: string;
-  type: string;
-  amount: number;
-  status: string;
-  method: string | null;
-  reference: string | null;
-  txid: string | null;
-  createdAt: string;
-};
+const TABS = [
+  { id: "dashboard", label: "Dashboard", icon: "📊" },
+  { id: "deposits", label: "Deposits", icon: "💳" },
+  { id: "withdrawals", label: "Withdrawals", icon: "🏦" },
+  { id: "users", label: "Players", icon: "👥" },
+  { id: "games", label: "Games", icon: "🎰" },
+  { id: "sports", label: "Sports", icon: "⚽" },
+  { id: "ledger", label: "Ledger", icon: "🧾" },
+  { id: "promos", label: "Promos", icon: "🎟️" },
+] as const;
 
-const TOKEN_KEY = "zb_admin_token";
+type TabId = (typeof TABS)[number]["id"];
 
-async function call<T = Record<string, unknown>>(url: string, body?: unknown): Promise<T & { error?: string }> {
-  const token = sessionStorage.getItem(TOKEN_KEY) ?? "";
-  const res = await fetch(url, {
-    method: body === undefined ? "GET" : "POST",
-    headers: body === undefined ? { Authorization: `Bearer ${token}` } : { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-    body: body === undefined ? undefined : JSON.stringify(body),
-    cache: "no-store",
-  });
-  return (await res.json().catch(() => ({ error: "Network error" }))) as T & { error?: string };
+function AdminShell() {
+  const router = useRouter();
+  const params = useSearchParams();
+  const raw = params.get("tab") ?? "dashboard";
+  const tab: TabId = TABS.some((t) => t.id === raw) ? (raw as TabId) : "dashboard";
+
+  const goTo = (t: string) => router.replace(`/admin?tab=${t}`);
+
+  function logout() {
+    clearToken();
+    router.replace("/admin");
+    window.location.reload();
+  }
+
+  return (
+    <div className="-mx-3 -mt-4 md:-mx-6">
+      <div className="sticky top-14 z-30 border-b border-line bg-side/95 backdrop-blur">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3">
+          <div className="flex items-center gap-2">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gold font-black text-black">Z</span>
+            <div>
+              <div className="text-sm font-black leading-tight">Zema Games · Admin</div>
+              <div className="text-[11px] leading-tight text-mute">Production control center</div>
+            </div>
+          </div>
+          <button onClick={logout} className="btn-ghost rounded-lg px-3 py-1.5 text-sm">🔒 Lock panel</button>
+        </div>
+        <div className="mx-auto max-w-7xl overflow-x-auto px-4 pb-2 no-scrollbar">
+          <div className="flex gap-1">
+            {TABS.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => goTo(t.id)}
+                className={`shrink-0 rounded-lg px-3 py-1.5 text-sm font-bold transition-colors ${
+                  tab === t.id ? "bg-gold text-black" : "text-mute hover:bg-white/5 hover:text-white"
+                }`}
+              >
+                {t.icon} {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-7xl px-4 py-6">
+        {tab === "dashboard" && <Dashboard goTo={goTo} />}
+        {tab === "deposits" && <Deposits />}
+        {tab === "withdrawals" && <Withdrawals />}
+        {tab === "users" && <Users />}
+        {tab === "games" && <Games />}
+        {tab === "sports" && <Sports />}
+        {tab === "ledger" && <Transactions />}
+        {tab === "promos" && <Promos />}
+      </div>
+    </div>
+  );
 }
 
-const fmt = (n: number) => n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-export default function AdminPage() {
-  const [token, setToken] = useState("");
-  const [authed, setAuthed] = useState(false);
-  const [checking, setChecking] = useState(true);
+function LoginGate({ onUnlock }: { onUnlock: () => void }) {
+  const [token, setTokenValue] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
-  const [status, setStatus] = useState<"pending" | "all">("pending");
-  const [rows, setRows] = useState<Deposit[] | null>(null);
-  const [note, setNote] = useState("");
-
-  useEffect(() => {
-    const t = setTimeout(() => {
-      setAuthed(Boolean(sessionStorage.getItem(TOKEN_KEY)));
-      setChecking(false);
-    }, 0);
-    return () => clearTimeout(t);
-  }, []);
-
-  const load = useCallback(async () => {
-    const d = await call<{ rows: Deposit[] }>(`/api/admin/deposits?status=${status}`);
-    if (d.error) return setErr(d.error);
-    setRows(d.rows ?? []);
-    setErr("");
-  }, [status]);
-
-  useEffect(() => {
-    if (!authed) return;
-    const t = setTimeout(load, 0);
-    return () => clearTimeout(t);
-  }, [authed, load]);
 
   async function tryLogin(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
     setErr("");
-    sessionStorage.setItem(TOKEN_KEY, token);
-    const d = await call<{ rows: Deposit[] }>("/api/admin/deposits?status=pending");
+    setToken(token);
+    const d = await adminCall<{ rows: unknown[] }>("/api/admin/deposits?status=pending");
     if (d.error || !d.rows) {
-      sessionStorage.removeItem(TOKEN_KEY);
+      clearToken();
       setErr("Invalid admin passcode");
       setBusy(false);
       return;
     }
-    setAuthed(true);
     setBusy(false);
+    onUnlock();
   }
 
-  async function approve(d: Deposit) {
-    if (!confirm(`Approve deposit Br ${fmt(d.amount)} for @${d.username}? Verify the SMS matches ${d.txid}.`)) return;
-    setBusy(true);
-    setErr("");
-    const r = await call<{ bonus?: number }>("/api/admin/deposits/approve", { id: d.id, amount: d.amount, txid: d.txid });
-    setBusy(false);
-    if (r.error) return setErr(`Failed: ${r.error} ${r.error === "Amount does not match the deposit request" ? "— edit the amount to match the SMS." : ""}`);
-    setNote(`Approved ${d.reference} (+Br ${fmt(d.amount)}${r.bonus ? `, bonus +${fmt(r.bonus)}` : ""})`);
-    load();
-  }
-
-  async function reject(d: Deposit) {
-    if (!confirm(`Reject deposit ${d.reference} (Br ${fmt(d.amount)})?`)) return;
-    setBusy(true);
-    setErr("");
-    const r = await call("/api/admin/deposits/reject", { id: d.id });
-    setBusy(false);
-    if (r.error) return setErr(r.error);
-    setNote(`Rejected ${d.reference}`);
-    load();
-  }
-
-  function logout() {
-    sessionStorage.removeItem(TOKEN_KEY);
-    setAuthed(false);
-    setRows(null);
-    setNote("");
-  }
-
-  if (checking) return <div className="h-60 animate-pulse rounded-2xl bg-card" />;
-
-  if (!authed)
-    return (
-      <div className="mx-auto max-w-sm py-16">
-        <h1 className="mb-1 text-2xl font-black">🔐 Admin Panel</h1>
-        <p className="mb-5 text-sm text-mute">Enter the admin passcode to review and approve deposits.</p>
+  return (
+    <div className="mx-auto max-w-sm py-16">
+      <div className="rounded-2xl border border-line bg-card p-6">
+        <h1 className="text-2xl font-black">🔐 Admin Panel</h1>
+        <p className="mb-5 mt-1 text-sm text-mute">Enter the admin passcode to manage the casino, payments, players and games.</p>
         <form onSubmit={tryLogin} className="space-y-3">
-          <input type="password" className="input" placeholder="Admin passcode" value={token} onChange={(e) => setToken(e.target.value)} required />
+          <input
+            type="password"
+            className="input"
+            placeholder="Admin passcode"
+            value={token}
+            onChange={(e) => setTokenValue(e.target.value)}
+            autoFocus
+            required
+          />
           {err && <p className="rounded-lg bg-lose/10 px-3 py-2 text-sm text-red-300">{err}</p>}
-          <button disabled={busy} className="btn-gold w-full rounded-xl py-3">{busy ? "Checking…" : "Unlock"}</button>
+          <button disabled={busy} className="btn-gold w-full rounded-xl py-3">
+            {busy ? "Checking…" : "Unlock"}
+          </button>
         </form>
       </div>
-    );
-
-  const pending = rows?.filter((r) => r.status === "pending") ?? [];
-  return (
-    <div className="mx-auto max-w-3xl space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-black">🔐 Deposit Approval</h1>
-        <div className="flex items-center gap-2">
-          <div className="flex rounded-xl bg-card p-1">
-            {(["pending", "all"] as const).map((s) => (
-              <button key={s} onClick={() => setStatus(s)} className={`rounded-lg px-3 py-1.5 text-sm font-bold capitalize ${status === s ? "bg-card2" : "text-mute"}`}>{s}</button>
-            ))}
-          </div>
-          <button onClick={logout} className="btn-ghost rounded-lg px-3 py-1.5 text-sm">Log out</button>
-        </div>
-      </div>
-
-      {note && <div className="rounded-xl border border-win/40 bg-win/10 px-4 py-2 text-sm text-win">{note}</div>}
-      {err && <div className="rounded-xl border border-lose/40 bg-lose/10 px-4 py-2 text-sm text-red-300">{err}</div>}
-
-      {status === "pending" && pending.length === 0 ? (
-        <p className="rounded-2xl bg-card py-10 text-center text-mute">All caught up — no pending deposits. 🎉</p>
-      ) : rows === null ? (
-        <div className="h-40 animate-pulse rounded-2xl bg-card" />
-      ) : rows.length === 0 ? (
-        <p className="rounded-2xl bg-card py-10 text-center text-mute">No deposits found.</p>
-      ) : (
-        <div className="space-y-3">
-          {rows.map((d) => (
-            <div key={d.id} className="rounded-2xl bg-card p-4">
-              <div className="flex flex-wrap items-start justify-between gap-2">
-                <div>
-                  <div className="font-bold">{d.reference ?? `#${d.id}`} <span className={`ml-1 text-[11px] font-bold uppercase ${d.status === "completed" ? "text-mute" : d.status === "rejected" ? "text-lose" : "text-gold"}`}>{d.status}</span></div>
-                  <div className="text-sm text-mute">@{d.username} · {d.phone} · deposit · {d.method}</div>
-                  <div className="mt-1 font-black text-lg">Br {fmt(d.amount)}</div>
-                  <div className="text-xs text-mute" suppressHydrationWarning>{new Date(d.createdAt).toLocaleString()}</div>
-                </div>
-                <div className="rounded-xl bg-bg px-3 py-2 font-mono text-sm">{d.txid}</div>
-              </div>
-              {d.status === "pending" && (
-                <div className="mt-3 flex gap-2">
-                  <button disabled={busy} onClick={() => approve(d)} className="btn-green flex-1 rounded-xl py-2.5 text-sm">✓ Approve</button>
-                  <button disabled={busy} onClick={() => reject(d)} className="flex-1 rounded-xl bg-lose/20 py-2.5 text-sm font-bold text-red-300 hover:bg-lose/30">✕ Reject</button>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
     </div>
+  );
+}
+
+export default function AdminPage() {
+  const [authed, setAuthed] = useState(false);
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    const t = setTimeout(async () => {
+      if (getToken()) {
+        const d = await adminCall<{ rows: unknown[] }>("/api/admin/deposits?status=pending");
+        setAuthed(Boolean(!d.error && d.rows));
+      }
+      setChecking(false);
+    }, 0);
+    return () => clearTimeout(t);
+  }, []);
+
+  if (checking) return <div className="h-60 animate-pulse rounded-2xl bg-card" />;
+  if (!authed) return <LoginGate onUnlock={() => setAuthed(true)} />;
+
+  return (
+    <Suspense fallback={<div className="h-60 animate-pulse rounded-2xl bg-card" />}>
+      <AdminShell />
+    </Suspense>
   );
 }

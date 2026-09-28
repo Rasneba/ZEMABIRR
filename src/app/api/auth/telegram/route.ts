@@ -14,7 +14,10 @@ export async function POST(req: Request) {
   const phone = normalizePhone(body.phone);
   try {
     await authTelegramUser(tg, phone);
-  } catch {
+  } catch (e) {
+    if (e instanceof Error && e.message === "banned") {
+      return json({ error: "This account has been suspended. Contact support." }, 403);
+    }
     return json({ error: "Something went wrong, please try again" }, 500);
   }
   return json({ ok: true });

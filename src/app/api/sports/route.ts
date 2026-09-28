@@ -1,35 +1,18 @@
-import { and, desc, eq, lte } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { sportBets, type Selection } from "@/db/schema";
 import { getCurrentUser, json, unauthorized } from "@/lib/auth";
-import { getFixtures, MATCH_DURATION, matchResult, selectionWins } from "@/lib/sports";
-import { credit, debitStake, parseAmount } from "@/lib/wallet";
+import { getFixtures, MATCH_DURATION, matchResult } from "@/lib/sports";
+import { settleDueBets } from "@/lib/sports-settle";
+import { debitStake, parseAmount } from "@/lib/wallet";
 import { r2 } from "@/lib/brand";
 
 export const dynamic = "force-dynamic";
 
-async function settleDue(userId: number) {
-  const due = await db
-    .select()
-    .from(sportBets)
-    .where(and(eq(sportBets.userId, userId), eq(sportBets.status, "pending"), lte(sportBets.settleAt, new Date())));
-  for (const b of due) {
-    const sels = b.selections.map((s) => ({ ...s, result: selectionWins(s.market, s.pick, s.matchId) ? "won" : "lost" })) as Selection[];
-    const won = sels.every((s) => s.result === "won");
-    const payout = won ? r2(b.stake * b.totalOdds) : 0;
-    const upd = await db
-      .update(sportBets)
-      .set({ status: won ? "won" : "lost", payout, selections: sels })
-      .where(and(eq(sportBets.id, b.id), eq(sportBets.status, "pending")))
-      .returning({ id: sportBets.id });
-    if (upd[0] && payout > 0) await credit(userId, payout);
-  }
-}
-
 export async function GET() {
   const user = await getCurrentUser();
   if (!user) return unauthorized();
-  await settleDue(user.id);
+  await settleDueBets(user.id);
   const rows = await db.select().from(sportBets).where(eq(sportBets.userId, user.id)).orderBy(desc(sportBets.id)).limit(30);
   const withScores = rows.map((b) => ({
     ...b,
