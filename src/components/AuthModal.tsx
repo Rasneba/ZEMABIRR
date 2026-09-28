@@ -41,8 +41,6 @@ export default function AuthModal() {
     toast("Welcome! Logged in with Telegram", "success");
   }
 
-  // Telegram Mini App path: the official Login Widget iframe is blocked inside
-  // the app webview, so authenticate straight with the initData instead.
   async function continueWithTg() {
     if (tgBusy) return;
     setTgBusy(true);
@@ -80,8 +78,10 @@ export default function AuthModal() {
     };
   }, [authMode]);
 
-  // Mount-time so the Login Widget button is only rendered once the holder div
-  // actually exists in the DOM (fixes the widget silently failing to load).
+  // Mount the official Telegram Login Widget (works once the site domain is
+  // allowed for the bot in @BotFather). The widget is only usable in a regular
+  // browser — inside the Telegram Mini App webview it's blocked, so the
+  // initData path is used there instead (see render + continueWithTg).
   useEffect(() => {
     if (!authMode || !tgBot) return;
     const holder = document.getElementById("zb-tg-widget");
@@ -144,12 +144,17 @@ export default function AuthModal() {
         </div>
         {(tgBot || tgInitData) && (
           <div className="mb-5">
-            {tgBot ? (
-              <div id="zb-tg-widget" className="flex justify-center" />
-            ) : tgInitData ? (
+            {tgInitData ? (
               <button type="button" onClick={continueWithTg} disabled={tgBusy} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#229ED9] px-4 py-3 text-sm font-bold text-white hover:brightness-110 disabled:opacity-60">
                 <span className="text-lg">✈️</span> {tgBusy ? "Signing in…" : "Continue with Telegram"}
               </button>
+            ) : tgBot ? (
+              <>
+                <div id="zb-tg-widget" className="flex justify-center" />
+                <a href={`https://t.me/${tgBot}/app`} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#229ED9] px-4 py-3 text-sm font-bold text-white hover:brightness-110">
+                  <span className="text-lg">✈️</span> Or open the app in Telegram — auto-login
+                </a>
+              </>
             ) : null}
             <div className="my-4 flex items-center gap-3 text-xs text-mute">
               <span className="h-px flex-1 bg-line" />
