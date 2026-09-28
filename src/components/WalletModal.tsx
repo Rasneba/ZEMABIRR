@@ -3,13 +3,10 @@
 import { useState } from "react";
 import { api, useApp } from "./AppProvider";
 import { fmt, BRAND } from "@/lib/brand";
+import { PAY_METHODS } from "@/lib/payments";
 
-export const PAY_METHODS = [
-  { id: "telebirr", name: "telebirr", color: "#0e9fe0", emoji: "📱", hint: "Your Telebirr number" },
-  { id: "cbebirr", name: "CBE Birr", color: "#7b2a8e", emoji: "🏦", hint: "Your CBE Birr phone number" },
-  { id: "mpesa", name: "M-PESA", color: "#16a34a", emoji: "💸", hint: "Your M-PESA phone number" },
-  { id: "usdt", name: "USDT (TRC20)", color: "#26a17b", emoji: "🪙", hint: "Your TRC20 wallet address" },
-];
+export { PAY_METHODS };
+export type { PayMethod } from "@/lib/payments";
 
 export function WalletForm({ mode, onDone }: { mode: "deposit" | "withdraw"; onDone?: () => void }) {
   const { user, refresh, toast } = useApp();

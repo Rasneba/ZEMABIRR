@@ -87,6 +87,24 @@ export default async function Home() {
       </Link>
 
       <section>
+        <h2 className="mb-3 text-lg font-bold">⭐ Why {BRAND.name}</h2>
+        <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+          {[
+            { icon: "⚡", t: "Instant telebirr deposits", d: "Agent-verified in minutes" },
+            { icon: "💸", t: "Fast cashouts", d: "Telebirr, CBE Birr, M-Pesa & USDT" },
+            { icon: "🎰", t: "Fair games", d: "Provably fair, server-authoritative" },
+            { icon: "🛡️", t: "24/7 support", d: "We answer on Telegram" },
+          ].map((b) => (
+            <div key={b.t} className="rounded-xl bg-card p-4 ring-1 ring-white/5">
+              <div className="text-2xl">{b.icon}</div>
+              <div className="mt-1 text-sm font-bold">{b.t}</div>
+              <div className="text-xs text-mute">{b.d}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section>
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-lg font-bold">⚽ Top Matches</h2>
           <Link href="/sports" className="text-sm font-semibold text-gold">All sports →</Link>

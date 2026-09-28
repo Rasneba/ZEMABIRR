@@ -9,6 +9,23 @@ export const metadata: Metadata = {
   title: `${BRAND.name} — ${BRAND.tagline}`,
   description: `${BRAND.name} (${BRAND.domain}) is your Telegram Mini App for online casino and sports betting. Play Sky Jet, Keno, Mines, Chicken Road and more. Win, and enjoy rewards with our engaging gaming experience.`,
   keywords: ["Zema Games", "online casino Ethiopia", "sports betting", "crash games", "keno", "birr", "Telegram Mini App"],
+  applicationName: BRAND.name,
+  icons: {
+    icon: "/icon.svg",
+    apple: "/icon.svg",
+  },
+  openGraph: {
+    type: "website",
+    siteName: BRAND.name,
+    title: `${BRAND.name} — ${BRAND.tagline}`,
+    description: `${BRAND.name} — fast telebirr deposits, instant payouts, casino games and sports betting. Get a 200% bonus on your first deposit.`,
+    images: ["/icon.svg"],
+  },
+  twitter: {
+    card: "summary",
+    title: `${BRAND.name} — ${BRAND.tagline}`,
+    description: `${BRAND.name} — fast telebirr deposits, instant payouts, casino games and sports betting.`,
+  },
 };
 
 export const viewport: Viewport = {

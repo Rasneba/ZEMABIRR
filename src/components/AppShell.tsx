@@ -25,6 +25,7 @@ const FEATURE_LINKS = [
   { href: "/vip", label: "VIP", icon: "👑" },
   { href: "/promo#promotions", label: "Promo", icon: "📣" },
   { href: "/bonus", label: "Bonus", icon: "💰" },
+  { href: "/payments", label: "Payments", icon: "💳" },
 ];
 
 const SUPPORT_LINKS = [
