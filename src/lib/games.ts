@@ -59,18 +59,20 @@ export function chickenMultiplier(level: ChickenLevel, step: number) {
 }
 
 export const KENO_NUMBERS = 80;
-export const KENO_DRAW = 10;
+export const KENO_DRAW = 20;
+// Rich classic 80-ball keno paytable (10/80 drawn 20) tuned to ≈75–96.7% RTP/pick,
+// avg ≈92.5%. Row p = multipliers for catches 0..p (0 = no payout).
 export const KENO_PAYTABLE: Record<number, number[]> = {
-  1: [0, 7.6],
-  2: [0, 3, 20],
-  3: [0, 0, 15.5, 250],
-  4: [0, 0, 10, 40, 500],
-  5: [0, 0, 7, 17, 70, 900],
-  6: [0, 0, 0, 35, 100, 500, 4000],
-  7: [0, 0, 0, 20, 60, 200, 1000, 6000],
-  8: [0, 0, 0, 13, 34, 90, 340, 1550, 7800],
-  9: [0, 0, 0, 10, 20, 50, 130, 450, 2000, 12000],
-  10: [0, 0, 0, 7, 15, 36, 82, 260, 720, 3200, 20000],
+  1: [0, 3],
+  2: [0, 0, 15],
+  3: [0, 0, 2, 48],
+  4: [0, 0, 1, 7, 140],
+  5: [0, 0, 0, 2, 38, 500],
+  6: [0, 0, 0, 1, 11, 120, 1100],
+  7: [0, 0, 0, 0, 3, 35, 400, 8000],
+  8: [0, 0, 0, 0, 0, 21, 130, 1400, 10000],
+  9: [0, 0, 0, 0, 0, 0, 70, 700, 4000, 30000],
+  10: [0, 0, 0, 0, 0, 0, 0, 200, 3300, 25000, 60000],
 };
 
 export const ROULETTE_RED = [1, 3, 5, 8, 10, 12];

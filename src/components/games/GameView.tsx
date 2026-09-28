@@ -67,12 +67,12 @@ export default function GameView({ slug }: { slug: string }) {
       {game.engine === "mines" && <Mines />}
       {game.engine === "chicken" && <Chicken />}
       {game.engine === "fastkeno" && <FastKeno />}
-      {game.engine === "keno" && <Keno game={game} />}
+      {game.engine === "keno" && <Keno />}
       {game.engine === "dice" && <Dice game={game} />}
       {game.engine === "plinko" && <Plinko game={game} />}
       {game.engine === "blackjack" && <Blackjack game={game} />}
       {game.engine === "roulette" && <Roulette game={game} />}
-      {game.engine !== "fastkeno" && <MyBets key={`${tick}-${user?.balance}`} slug={slug} />}
+      {game.engine !== "fastkeno" && game.engine !== "keno" && <MyBets key={`${tick}-${user?.balance}`} slug={slug} />}
     </div>
   );
 }
