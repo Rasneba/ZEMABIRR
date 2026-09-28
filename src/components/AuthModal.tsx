@@ -151,8 +151,8 @@ export default function AuthModal() {
             ) : tgBot ? (
               <>
                 <div id="zb-tg-widget" className="flex justify-center" />
-                <a href={`https://t.me/${tgBot}/app`} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#229ED9] px-4 py-3 text-sm font-bold text-white hover:brightness-110">
-                  <span className="text-lg">✈️</span> Or open the app in Telegram — auto-login
+                <a href={`https://t.me/${tgBot}`} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#229ED9] px-4 py-3 text-sm font-bold text-white hover:brightness-110">
+                  <span className="text-lg">✈️</span> Log in from the bot chat — auto-login
                 </a>
               </>
             ) : null}
