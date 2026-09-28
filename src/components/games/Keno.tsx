@@ -310,6 +310,7 @@ export default function Keno() {
 
   const nextDrawIn = round ? Math.max(0, Math.ceil((round.betEnd - now) / 1000)) : 0;
   const resultLeft = round ? Math.max(0, Math.ceil((round.end - now) / 1000)) : 0;
+  const betClosing = !!round && phase === "betting" && round.betEnd - now <= 1500;
   const ballEvery = (KL.drawMs / KL.draw) / 1000;
 
   return (
@@ -333,7 +334,9 @@ export default function Keno() {
               </div>
             )}
             {phase === "drawing" && <span className="text-sm font-bold text-gold">Drawing ball {drawnVisible.length}/{KL.draw}…</span>}
-            {phase === "result" && <span className="text-sm font-bold text-white/70">Next draw in {nextDrawIn}s</span>}
+            {(phase === "drawing" || phase === "result") && round && (
+              <span className="text-sm font-bold text-white/70">Betting opens in {pad2(Math.max(0, Math.ceil((round.end - now) / 1000)))}s</span>
+            )}
           </div>
         </div>
 
@@ -404,8 +407,8 @@ export default function Keno() {
                 <button key={v} onClick={() => saveBet(String(v))} disabled={phase !== "betting"} className="btn-ghost rounded-lg py-1.5 text-[11px]">{v.toLocaleString()}</button>
               ))}
             </div>
-            <button onClick={play} disabled={busy || phase !== "betting" || picks.length === 0} className="btn-gold mt-3 w-full rounded-xl py-3 text-base font-black">
-              {busy ? "Placing…" : phase !== "betting" ? "Wait for next round" : picks.length === 0 ? "Pick numbers to bet" : `Bet ${money(Number(bet) || 0)}`}
+            <button onClick={play} disabled={busy || phase !== "betting" || betClosing || picks.length === 0} className="btn-gold mt-3 w-full rounded-xl py-3 text-base font-black">
+              {busy ? "Placing…" : phase !== "betting" ? "Wait for next round" : betClosing ? "Betting closing…" : picks.length === 0 ? "Pick numbers to bet" : `Bet ${money(Number(bet) || 0)}`}
             </button>
             {myStake > 0 && <div className="mt-2 text-center text-xs text-mute">You have {myTickets.length} ticket{myTickets.length !== 1 ? "s" : ""} this round · {money(myStake)} staked</div>}
             <BalanceLine />
