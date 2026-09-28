@@ -21,12 +21,6 @@ import {
 type Tab = "game" | "history" | "results" | "stats";
 const money = (n: number) => n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const BET_STEPS = [1, 2, 4, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 5000, 10000];
-const DURATION_OPTIONS = [
-  { value: 30_000, label: "30 seconds" },
-  { value: 60_000, label: "1 minute" },
-  { value: 120_000, label: "2 minutes" },
-];
-const DEFAULT_DRAW_MS = 60_000;
 function randomPicks(k: number) {
   const pool = Array.from({ length: FK.numbers }, (_, i) => i + 1);
   const out: number[] = [];
@@ -259,28 +253,18 @@ const [history, setHistory] = useState<FkHistoryRow[] | null>(null);
   const [stats, setStats] = useState<FkStats | null>(null);
   const [openResult, setOpenResult] = useState<number | null>(null);
 
-  const [drawMs, setDrawMs] = useState<number>(() => {
-    if (typeof window === "undefined") return DEFAULT_DRAW_MS;
-    const saved = Number(window.localStorage.getItem("zk_draw_ms"));
-    return Number.isFinite(saved) && saved > 0 ? saved : DEFAULT_DRAW_MS;
-  });
-  const changeDuration = (v: number) => {
-    setDrawMs(v);
-    localStorage.setItem("zk_draw_ms", String(v));
-  };
-
   const load = useCallback(async () => {
     if (inflight.current) return;
     inflight.current = true;
     lastLoad.current = Date.now();
     const t0 = Date.now();
-    const d = await api<FkState>(`/api/games/fast-keno?drawMs=${drawMs}`);
+    const d = await api<FkState>("/api/games/fast-keno");
     const t1 = Date.now();
     inflight.current = false;
     if (d.error || !d.round) return;
     offset.current = d.now - (t0 + t1) / 2;
     setSt(d);
-  }, [drawMs]);
+  }, []);
 
   // clock + initial load
   useEffect(() => {
@@ -294,7 +278,7 @@ const [history, setHistory] = useState<FkHistoryRow[] | null>(null);
     };
   }, [load]);
 
-  // (re)load on mount and when the draw duration changes
+  // (re)load on mount
   useEffect(() => {
     const t = setTimeout(load, 0);
     return () => clearTimeout(t);
@@ -491,16 +475,6 @@ const [history, setHistory] = useState<FkHistoryRow[] | null>(null);
             </div>
           </div>
 
-          {/* draw duration — always visible */}
-          <div className="mx-2.5 mt-2 flex items-center gap-2 sm:ml-[74px]">
-            <span className="shrink-0 text-[13px] font-bold uppercase text-white/50">Draw speed</span>
-            <div className="grid flex-1 grid-cols-3 gap-1">
-              {DURATION_OPTIONS.map((o) => (
-                <button key={o.value} onClick={() => changeDuration(o.value)} className={`h-9 rounded-md text-xs font-bold ${drawMs === o.value ? "fk-tile-on" : "fk-tile"}`}>{o.label}</button>
-              ))}
-            </div>
-          </div>
-
           {/* board */}
           <div className="mt-3 grid grid-cols-10 gap-[5px] px-2.5">
             {Array.from({ length: FK.numbers }, (_, i) => i + 1).map((n) => {
@@ -655,7 +629,7 @@ const [history, setHistory] = useState<FkHistoryRow[] | null>(null);
           <ol className="mb-4 list-decimal space-y-1.5 pl-5 text-lg text-white/85">
             <li>Choose 1 to {FK.maxPicks} numbers from 1 to {FK.numbers} (or use ⚙ quick pick).</li>
             <li>Set your stake ({FK.minBet}–{FK.maxBet.toLocaleString()} {FK.currency}) and press <b>BET</b> before the timer ends. You can place up to {FK.maxTicketsPerRound} tickets per round.</li>
-            <li>{FK.draw} balls are drawn — one every {FK.ballMs / 1000}s. Every matched number is a <span className="font-bold text-[var(--fk-green)]">hit</span>.</li>
+            <li>{FK.draw} balls are drawn — one every {FK.drawMs / FK.draw / 1000}s. Every matched number is a <span className="font-bold text-[var(--fk-green)]">hit</span>.</li>
             <li>Your win = stake × multiplier from the paytable. Winnings are credited automatically.</li>
           </ol>
           <div className="mb-3 flex gap-4 text-base text-white/70">

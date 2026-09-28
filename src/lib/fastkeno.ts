@@ -6,8 +6,8 @@ export const FK = {
   numbers: 80, // board 1..80
   draw: 20, // balls drawn per round
   maxPicks: 10, // numbers per ticket (1..10)
-  betMs: 60_000, // betting window
-  ballMs: 1_000, // one ball per second (base speed)
+  betMs: 30_000, // betting window
+  drawMs: 90_000, // common draw duration: 90s for the 20-ball draw (ball every 4.5s)
   resultMs: 4_000, // results shown before next round
   minBet: 1,
   maxBet: 10_000,
@@ -17,21 +17,13 @@ export const FK = {
   epoch: Date.UTC(2026, 7, 16, 0, 0, 0),
 } as const;
 
-// Base per-ball draw speed (ms). Set FAST_KENO_DRAW_MS to change globally, e.g.
-// 3000 = 60s draw. Users can also pick a draw duration in-game (see FK_DRAW_OPTIONS_MS).
-export const DRAW_SPEED_MS = Number(process.env.FAST_KENO_DRAW_MS ?? FK.ballMs);
+// Single common draw duration — no per-user draw speed option (fixed at 90s for 20 balls).
+export const FK_DRAW_MS: number = FK.drawMs;
 
-// Default total draw duration in ms (base schedule everyone falls back to).
-export const FK_DRAW_MS = FK.draw * DRAW_SPEED_MS;
-
-// Allowed user-selectable draw durations (total ms): 30s, 1m, 2m.
-export const FK_DRAW_OPTIONS_MS = [30_000, 60_000, 120_000];
-
-/** Snap a requested total draw duration to the nearest allowed option (or the base). */
+/** Accept a draw duration, falling back to the fixed schedule. */
 export function fkNormalizeDrawMs(v: unknown, fallback = FK_DRAW_MS) {
   const n = Number(v);
-  if (!Number.isFinite(n) || n <= 0) return fallback;
-  return FK_DRAW_OPTIONS_MS.reduce((a, b) => (Math.abs(b - n) < Math.abs(a - n) ? b : a), FK_DRAW_OPTIONS_MS[0]);
+  return Number.isFinite(n) && n > 0 ? n : fallback;
 }
 
 export const fkCycleMs = (drawMs = FK_DRAW_MS) => FK.betMs + drawMs + FK.resultMs;

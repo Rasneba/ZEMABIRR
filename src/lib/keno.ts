@@ -1,6 +1,6 @@
 // Classic Keno — live, round-based 80-ball Keno.
 // Rounds are global and derived from the wall clock (no background worker):
-// 18s betting → 10s draw (one ball / sec) → 2s result = one draw every 30s.
+// 30s betting → 90s draw (20 balls, one every 4.5s) → 2s result.
 // Payout table and fairness logic mirror the instant engine (see KENO_PAYTABLE).
 
 import { KENO_PAYTABLE } from "./games";
@@ -12,10 +12,10 @@ export const KL = {
   numbers: 80, // board 1..80
   draw: 20, // balls drawn per round (classic 80-ball keno draws 20)
   maxPicks: 10, // numbers per ticket
-  betMs: 10_000, // betting window
-  drawMs: 18_000, // total draw duration (20 balls ≈ 0.9s each)
+  betMs: 30_000, // betting window
+  drawMs: 90_000, // common draw duration: 90s for the 20-ball draw (ball every 4.5s)
   resultMs: 2_000, // results shown before next round
-  cycleMs: 30_000, // = betMs + drawMs + resultMs → next draw every 30s
+  cycleMs: 122_000, // = betMs + drawMs + resultMs
   minBet: 1,
   maxBet: 10_000,
   maxTicketsPerRound: 20,
