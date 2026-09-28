@@ -84,7 +84,8 @@ const reset = (chatId, text) => {
 };
 
 function startFlow(chatId, step, prompt) {
-  steps.set(chatId, { step });
+  const prev = steps.get(chatId) ?? {};
+  steps.set(chatId, { ...prev, step });
   return send(chatId, prompt, PHONE_KEYBOARD);
 }
 
@@ -104,15 +105,15 @@ async function handleContact(chatId, m) {
     return mainMenu(chatId, `Phone ${phone} received. Use the buttons to Login or Register.`);
   }
   if (w.step === "login_phone") {
-    steps.set(chatId, { step: "login_password", phone });
+    steps.set(chatId, { ...w, step: "login_password", phone });
     return send(chatId, "Great. Now send your account password.");
   }
   if (w.step === "reg_phone") {
-    steps.set(chatId, { step: "reg_username", phone });
+    steps.set(chatId, { ...w, step: "reg_username", phone });
     return send(chatId, "Great. Now pick a username (3–20 letters, numbers or _).");
   }
   if (w.step === "forgot_phone") {
-    steps.set(chatId, { step: "forgot_password", phone });
+    steps.set(chatId, { ...w, step: "forgot_password", phone });
     return send(chatId, "Since you shared your phone, you can set a new password.\nSend your new password (at least 6 characters).");
   }
   return mainMenu(chatId, `Phone ${phone} received. Use the buttons to Login or Register.`);
@@ -122,12 +123,21 @@ async function handleText(chatId, text) {
   const w = steps.get(chatId);
 
   if (text === "❌ Cancel") return reset(chatId, "Cancelled. 🙂");
-  if (text === "🔑 Login" || text === "/login" || text.startsWith("/start") || text === "/help") {
-    if (text === "🔑 Login" || text === "/login") return startFlow(chatId, "login_phone", "Send your phone number (share it with 📱 or type 09XXXXXXXX).");
-    return reset(chatId, "🏠 *Zema Games*\nYour bank for the Zema Games app.\n\nUse the buttons below to Login, Register, or recover your password.\n🚀 Open App launches the game — when your account is linked you are signed in automatically.");
-  }
+  if (text === "🔑 Login" || text === "/login") return startFlow(chatId, "login_phone", "Send your phone number (share it with 📱 or type 09XXXXXXXX).");
   if (text === "📝 Register" || text === "/register") return startFlow(chatId, "reg_phone", "Register:\nSend your phone number (share 📱 or type 09XXXXXXXX).");
   if (text === "🔓 Forgot Password" || text === "/forgot") return startFlow(chatId, "forgot_phone", "Password recovery:\n📱 Share your phone number so we can confirm it's yours.");
+
+  if (text.startsWith("/start") || text === "/help") {
+    const tgId = String(w.tgId ?? "");
+    let greeting = "🏠 *Zema Games*\nYour bank for the Zema Games app.\n\nUse the buttons below to Login, Register, or recover your password.\n🚀 Open App launches the game — when your account is linked you are signed in automatically.";
+    if (tgId) {
+      const st = await callApi(`${appUrl}/api/auth/telegram/status`, { tgId });
+      if (st.linked) {
+        greeting = `👋 Welcome back, *${st.username || "player"}*!\n\nYou're already logged in — open the app and you're in instantly.\n\nUse the buttons below to manage your account.`;
+      }
+    }
+    return reset(chatId, greeting);
+  }
 
   if (!w) return mainMenu(chatId, "Use the buttons below. 🙂");
 
@@ -135,17 +145,17 @@ async function handleText(chatId, text) {
 
   if (w.step === "login_phone") {
     if (!phoneLike) return send(chatId, "That doesn't look like a phone — send 09XXXXXXXX or use 📱 Share Phone Number.");
-    steps.set(chatId, { step: "login_password", phone: phoneLike });
+    steps.set(chatId, { ...w, step: "login_password", phone: phoneLike });
     return send(chatId, "Now send your account password.");
   }
   if (w.step === "reg_phone") {
     if (!phoneLike) return send(chatId, "That doesn't look like a phone — send 09XXXXXXXX or use 📱 Share Phone Number.");
-    steps.set(chatId, { step: "reg_username", phone: phoneLike });
+    steps.set(chatId, { ...w, step: "reg_username", phone: phoneLike });
     return send(chatId, "Now pick a username (3–20 letters, numbers or _).");
   }
   if (w.step === "forgot_phone") {
     if (!phoneLike) return send(chatId, "📱 Share your phone number with the button below, or type 09XXXXXXXX.");
-    steps.set(chatId, { step: "forgot_password", phone: phoneLike });
+    steps.set(chatId, { ...w, step: "forgot_password", phone: phoneLike });
     return send(chatId, "Send your new password (at least 6 characters).");
   }
 
