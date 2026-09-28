@@ -14,57 +14,61 @@ export type TgUser = {
 };
 
 // Telegram Mini App auth: data-check-string = all initData fields
-// except `hash`, sorted by key, joined as `key=value` lines with "\n".
+// except `hash` (and `signature`), sorted by key, joined as `key=value`
+// lines with "\n" using URL-DECODED values (Telegram percent-encodes the
+// JSON in `user`, and the signature is computed over the decoded form).
 // secret_key = HMAC_SHA256(bot_token, "WebAppData").
-function buildDataCheckString(raw: string): { data?: string; hash?: string; authDate?: number } | null {
-  if (!raw) return null;
-  const pairs: [string, string][] = [];
-  for (const part of raw.split("&")) {
-    if (!part) continue;
-    const i = part.indexOf("=");
-    if (i === -1) continue;
-    pairs.push([part.slice(0, i), part.slice(i + 1)]);
-  }
-  const hash = pairs.find(([k]) => k === "hash")?.[1];
-  if (!hash) return null;
-  const data = pairs
-    .filter(([k]) => k !== "hash")
-    .sort((a, b) => (a[0] < b[0] ? -1 : 1))
-    .map(([k, v]) => `${k}=${v}`)
-    .join("\n");
-  return { data, hash, authDate: Number(pairs.find(([k]) => k === "auth_date")?.[1]) };
-}
-
 export function verifyInitData(raw: string): TgUser | null {
   const botToken = process.env.TELEGRAM_BOT_TOKEN;
   if (!botToken || !raw) return null;
-  const built = buildDataCheckString(raw);
-  if (!built?.data || !built.hash) return null;
+
+  let pairs: [string, string][];
+  try {
+    pairs = raw
+      .split("&")
+      .filter(Boolean)
+      .map((part) => {
+        const i = part.indexOf("=");
+        if (i === -1) throw new Error("bad pair");
+        return [part.slice(0, i), decodeURIComponent(part.slice(i + 1))] as [string, string];
+      });
+  } catch {
+    return null;
+  }
+
+  const hash = pairs.find(([k]) => k === "hash")?.[1];
+  if (!hash) return null;
+
+  const data = pairs
+    .filter(([k]) => k !== "hash" && k !== "signature")
+    .sort((a, b) => (a[0] < b[0] ? -1 : 1))
+    .map(([k, v]) => `${k}=${v}`)
+    .join("\n");
 
   const secretKey = createHmac("sha256", "WebAppData").update(botToken).digest();
-  const computed = createHmac("sha256", secretKey).update(built.data).digest();
-  const given = Buffer.from(built.hash, "hex");
+  const computed = createHmac("sha256", secretKey).update(data).digest();
+  const given = Buffer.from(hash, "hex");
   if (given.length === 0 || given.length !== computed.length || !timingSafeEqual(given, computed)) {
     return null;
   }
 
   const now = Math.floor(Date.now() / 1000);
-  if (!built.authDate || built.authDate < now - 86400 || built.authDate > now + 60) return null;
+  const authDate = Number(pairs.find(([k]) => k === "auth_date")?.[1]);
+  if (!authDate || authDate < now - 86400 || authDate > now + 60) return null;
 
-  const userRaw = built.data
-    .split("\n")
-    .find((line) => line.startsWith("user="))
-    ?.slice("user=".length);
+  const userRaw = pairs.find(([k]) => k === "user")?.[1];
   if (!userRaw) return null;
   try {
-    return JSON.parse(decodeURIComponent(userRaw)) as TgUser;
+    return JSON.parse(userRaw) as TgUser;
   } catch {
     return null;
   }
 }
 
 // Telegram Login Widget verification: secret_key = SHA256(bot_token),
-// data-check-string = all fields except `hash` sorted by key as `key=value` lines.
+// data-check-string = all fields except `hash` sorted by key as `key=value`
+// lines. Also tries the BotFather "Login Widget" client secret as a fallback
+// key, since bots configured with the new Web Login may sign with it.
 export function verifyTgLogin(u: unknown): TgUser | null {
   const botToken = process.env.TELEGRAM_BOT_TOKEN;
   if (!botToken || !u || typeof u !== "object") return null;
@@ -77,13 +81,24 @@ export function verifyTgLogin(u: unknown): TgUser | null {
     .sort()
     .map((k) => `${k}=${obj[k]}`)
     .join("\n");
-  const secret = createHash("sha256").update(botToken).digest();
-  const computed = createHmac("sha256", secret).update(dataCheck).digest("hex");
   const given = Buffer.from(hash, "hex");
-  const expected = Buffer.from(computed, "hex");
-  if (given.length === 0 || given.length !== expected.length || !timingSafeEqual(given, expected)) {
-    return null;
+
+  const secrets: Buffer[] = [createHash("sha256").update(botToken).digest()];
+  const clientSecret = process.env.TELEGRAM_LOGIN_CLIENT_SECRET;
+  if (clientSecret) {
+    secrets.push(Buffer.from(clientSecret, "utf8"));
+    secrets.push(createHash("sha256").update(clientSecret).digest());
   }
+
+  let ok = false;
+  for (const secret of secrets) {
+    const computed = createHmac("sha256", secret).update(dataCheck).digest();
+    if (given.length > 0 && given.length === computed.length && timingSafeEqual(given, computed)) {
+      ok = true;
+      break;
+    }
+  }
+  if (!ok) return null;
 
   const now = Math.floor(Date.now() / 1000);
   const authDate = Number(obj.auth_date);
