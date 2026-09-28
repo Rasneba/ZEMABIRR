@@ -1,4 +1,4 @@
-export type GameEngine = "crash" | "mines" | "chicken" | "keno" | "fastkeno" | "roulette";
+export type GameEngine = "crash" | "mines" | "chicken" | "keno" | "fastkeno" | "roulette" | "dice" | "plinko" | "blackjack";
 
 export type Game = {
   slug: string;
@@ -16,12 +16,19 @@ export type Game = {
 export const GAMES: Game[] = [
   { slug: "sky-jet", name: "Sky Jet", engine: "crash", image: "/games/skyjet.jpg", category: "Crash", provider: "Zema Games Originals", badge: "HOT", accent: "#e11d48", crashTheme: "plane" },
   { slug: "chicken-road", name: "Chicken Road", engine: "chicken", image: "/games/chicken.jpg", category: "Instant", provider: "Zema Games Originals", badge: "NEW", accent: "#f59e0b" },
+  { slug: "dice", name: "Dice", engine: "dice", image: "/games/dice.svg", category: "Instant", provider: "Zema Games Originals", badge: "HOT", accent: "#22d3ee" },
+  { slug: "plinko", name: "Plinko", engine: "plinko", image: "/games/plinko.svg", category: "Instant", provider: "Zema Games Originals", badge: "NEW", accent: "#a855f7" },
+  { slug: "blackjack", name: "Blackjack", engine: "blackjack", image: "/games/blackjack.svg", category: "Table", provider: "Zema Games Originals", badge: "TOP", accent: "#22c55e" },
+  { slug: "babel-tower", name: "Babel Tower", engine: "mines", image: "/games/mines.jpg", category: "Instant", provider: "Zema Games Originals", accent: "#f97316" },
   { slug: "fast-keno", name: "Fast Keno", engine: "fastkeno", image: "/games/keno.jpg", category: "Keno", provider: "Zema Games Originals", badge: "HOT", accent: "#4cc27e" },
-  { slug: "keno", name: "Keno", engine: "fastkeno", image: "/games/keno.jpg", category: "Keno", provider: "Zema Games Originals", badge: "TOP", accent: "#a855f7" },
+  { slug: "keno", name: "Keno", engine: "keno", image: "/games/keno.jpg", category: "Keno", provider: "Zema Games Originals", badge: "TOP", accent: "#a855f7" },
   { slug: "mines", name: "Mines", engine: "mines", image: "/games/mines.jpg", category: "Instant", provider: "Zema Games Originals", badge: "HOT", accent: "#14b8a6" },
   { slug: "mini-roulette", name: "Mini Roulette", engine: "roulette", image: "/games/roulette.jpg", category: "Table", provider: "Zema Games Originals", accent: "#16a34a" },
+  { slug: "double-roulette", name: "Double Roulette", engine: "roulette", image: "/games/roulette.jpg", category: "Table", provider: "Zema Games Originals", accent: "#10b981" },
   { slug: "turbo-keno", name: "Turbo Keno", engine: "fastkeno", image: "/games/keno.jpg", category: "Keno", provider: "Zema Games Originals", accent: "#ec4899" },
+  { slug: "speed-keno", name: "Speed Keno", engine: "fastkeno", image: "/games/keno.jpg", category: "Keno", provider: "Zema Games Originals", badge: "NEW", accent: "#fbbf24" },
   { slug: "avia-masters", name: "Avia Masters", engine: "crash", image: "/games/avia.jpg", category: "Crash", provider: "Zema Games Originals", badge: "NEW", accent: "#0ea5e9", crashTheme: "jet" },
+  { slug: "rocket-rush", name: "Rocket Rush", engine: "crash", image: "/games/avia.jpg", category: "Crash", provider: "Zema Games Originals", accent: "#8b5cf6", crashTheme: "jet" },
   { slug: "aviator", name: "Aviator", engine: "crash", image: "/games/avia.jpg", category: "Crash", provider: "Spribe", badge: "NEW", accent: "#f43f5e", crashTheme: "plane" },
 ];
 
@@ -112,4 +119,46 @@ export function weightedPick(weights: number[], r: number) {
     if ((x -= weights[i]) < 0) return i;
   }
   return weights.length - 1;
+}
+
+// ---------- Dice ----------
+// Roll is 1..100. `under X` wins when roll < X, `over X` when roll > X.
+// Multiplier = 0.97 / win probability (RTP ≈ 97%), target clamped to 3..97.
+export const DICE_MIN = 3;
+export const DICE_MAX = 97;
+export function diceMultiplier(mode: "over" | "under", target: number) {
+  const t = Math.min(DICE_MAX, Math.max(DICE_MIN, target));
+  const p = mode === "under" ? (t - 1) / 100 : (100 - t) / 100;
+  return Math.max(1.0, Math.floor((0.97 / p) * 100) / 100);
+}
+
+// ---------- Plinko ----------
+// 16 rows, 17 bins (binomial distribution). Table tuned so RTP ≈ 96.8%.
+export const PLINKO_ROWS = 16;
+export const PLINKO_TABLE = [
+  13.0, 7.0, 3.7, 2.4, 1.8, 1.3, 1.05, 0.75, 0.6,
+  0.75, 1.05, 1.3, 1.8, 2.4, 3.7, 7.0, 13.0,
+];
+export function plinkoPaytable(rows: number) {
+  // spread `rows` drops (view hint) — payouts map to the bin at index rows.
+  return PLINKO_TABLE;
+}
+
+// ---------- Blackjack ----------
+export const BJ_RANKS = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
+export const BJ_SUITS = ["♠", "♥", "♦", "♣"];
+export function scoreHand(cards: string[]): number {
+  let sum = 0;
+  let aces = 0;
+  for (const c of cards) {
+    const r = c.slice(0, -1);
+    if (r === "A") aces++;
+    else if (["J", "Q", "K"].includes(r)) sum += 10;
+    else sum += Number(r);
+  }
+  for (let i = 0; i < aces; i++) sum += sum + 11 <= 21 ? 11 : 1;
+  return sum;
+}
+export function cardFace(rank: string, suit: string) {
+  return `${rank}${suit}`;
 }

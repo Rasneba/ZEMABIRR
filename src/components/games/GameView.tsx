@@ -10,6 +10,10 @@ import Mines from "./Mines";
 import Chicken from "./Chicken";
 import FastKeno from "./FastKeno";
 import Roulette from "./Roulette";
+import Keno from "./Keno";
+import Dice from "./Dice";
+import Plinko from "./Plinko";
+import Blackjack from "./Blackjack";
 
 type Row = { id: number; bet: number; payout: number; multiplier: number; status: string; createdAt: string };
 
@@ -63,6 +67,10 @@ export default function GameView({ slug }: { slug: string }) {
       {game.engine === "mines" && <Mines />}
       {game.engine === "chicken" && <Chicken />}
       {game.engine === "fastkeno" && <FastKeno />}
+      {game.engine === "keno" && <Keno game={game} />}
+      {game.engine === "dice" && <Dice game={game} />}
+      {game.engine === "plinko" && <Plinko game={game} />}
+      {game.engine === "blackjack" && <Blackjack game={game} />}
       {game.engine === "roulette" && <Roulette game={game} />}
       {game.engine !== "fastkeno" && <MyBets key={`${tick}-${user?.balance}`} slug={slug} />}
     </div>
