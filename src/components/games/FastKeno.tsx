@@ -491,6 +491,16 @@ const [history, setHistory] = useState<FkHistoryRow[] | null>(null);
             </div>
           </div>
 
+          {/* draw duration — always visible */}
+          <div className="mx-2.5 mt-2 flex items-center gap-2 sm:ml-[74px]">
+            <span className="shrink-0 text-[13px] font-bold uppercase text-white/50">Draw speed</span>
+            <div className="grid flex-1 grid-cols-3 gap-1">
+              {DURATION_OPTIONS.map((o) => (
+                <button key={o.value} onClick={() => changeDuration(o.value)} className={`h-9 rounded-md text-xs font-bold ${drawMs === o.value ? "fk-tile-on" : "fk-tile"}`}>{o.label}</button>
+              ))}
+            </div>
+          </div>
+
           {/* board */}
           <div className="mt-3 grid grid-cols-10 gap-[5px] px-2.5">
             {Array.from({ length: FK.numbers }, (_, i) => i + 1).map((n) => {
@@ -536,14 +546,7 @@ const [history, setHistory] = useState<FkHistoryRow[] | null>(null);
                   <button onClick={() => { setPicks([]); setGear(false); }} className="h-10 rounded-md bg-white/5 text-base font-bold text-white/80 hover:bg-white/10">Clear</button>
                   <button disabled={!lastPicks.length} onClick={() => { setPicks(lastPicks); setGear(false); }} className="h-10 rounded-md bg-white/5 text-base font-bold text-white/80 hover:bg-white/10 disabled:opacity-40">Repeat last</button>
                 </div>
-                <div className="mb-1.5 mt-3 text-base font-bold uppercase text-white/60">Draw duration</div>
-                <div className="grid grid-cols-3 gap-1">
-                  {DURATION_OPTIONS.map((o) => (
-                    <button key={o.value} onClick={() => changeDuration(o.value)} className={`h-10 rounded-md text-sm font-bold ${drawMs === o.value ? "fk-tile-on" : "fk-tile"}`}>{o.label}</button>
-                  ))}
                 </div>
-                <p className="mt-2 text-xs text-white/50">How long it takes to draw all {FK.draw} balls. The round schedule follows your choice.</p>
-              </div>
             )}
           </div>
           <div className="px-2.5">
