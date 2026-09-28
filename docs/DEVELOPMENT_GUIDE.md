@@ -43,7 +43,7 @@ Browser ── fetch ──► /api/* route.ts ──► src/lib/* (business log
 | `/promo` | `src/app/promo/page.tsx` | client (promos + coupon codes) |
 | `/referral` | `src/app/referral/page.tsx` | client (invite & earn) |
 | `/wallet` | `src/app/wallet/page.tsx` | client (deposit/withdraw/history) |
-| `/admin` | `src/app/admin/page.tsx` | client (agent deposit approval, needs `ADMIN_TOKEN`) |
+| `/admin` | `src/app/admin/page.tsx` | client (full admin panel, needs `ADMIN_TOKEN`) |
 | `/profile` | `src/app/profile/page.tsx` | client |
 | `/support` | `src/app/support/page.tsx` | RSC (help, contact, responsible gaming) |
 | `/terms` `/privacy` | `src/app/terms/page.tsx` etc. | RSC (static legal) |
@@ -64,9 +64,22 @@ Browser ── fetch ──► /api/* route.ts ──► src/lib/* (business log
 | `/api/history` | GET | `?kind=tx\|games&game=` history |
 | `/api/wallet/deposit` | POST | queue agent-approved deposit (pending + SMS txid) |
 | `/api/wallet/withdraw` | POST | debit real balance (processing tx) |
-| `/api/admin/deposits` | GET | list deposits (`?status=pending\|all`), `Authorization: Bearer <ADMIN_TOKEN>` |
+| `/api/admin/deposits` | GET | list deposits (`?status=pending\|completed\|rejected\|all`), `Authorization: Bearer <ADMIN_TOKEN>` |
 | `/api/admin/deposits/approve` | POST | credit only when amount + SMS txid match (`src/lib/deposits.ts`) |
 | `/api/admin/deposits/reject` | POST | mark deposit rejected |
+| `/api/admin/stats` | GET | dashboard KPIs + 14-day series (signups, cash flow, volume, GGR) |
+| `/api/admin/withdrawals` | GET | list withdrawals (`?status=processing\|completed\|rejected\|all`) |
+| `/api/admin/withdrawals/settle` | POST | `{id, action: pay\|reject}` — pay marks completed; reject refunds (`src/lib/withdrawals.ts`) |
+| `/api/admin/users` | GET | search players (`?q=&limit=&offset=`) |
+| `/api/admin/users/detail` | GET | player profile + totals + recent tx/rounds (`?id=`) |
+| `/api/admin/users/adjust` | POST | manual balance credit/debit, ledgered as `adjust` |
+| `/api/admin/users/ban` | POST | `{id, banned: 0\|1, reason}` — banning kills sessions |
+| `/api/admin/games` | GET | per-game rounds/bet/payout/GGR/RTP |
+| `/api/admin/rounds` | GET | round audit feed (`?game=&status=&userId=`) |
+| `/api/admin/transactions` | GET | full ledger (`?type=&userId=&limit=&offset=`) |
+| `/api/admin/promos` | GET/POST/DELETE | promo code list/create/delete |
+| `/api/admin/sports` | GET | sportsbook exposure + tickets (`?status=`) |
+| `/api/admin/sports/settle-due` | POST | settle every due ticket (`src/lib/sports-settle.ts`) |
 | `/api/promo` | POST | redeem promo code (bonus balance) |
 | `/api/spin` | POST | 24h free spin, weighted prize |
 | `/api/lootbox` | POST | open Shamo box |
@@ -82,11 +95,11 @@ Browser ── fetch ──► /api/* route.ts ──► src/lib/* (business log
 
 - **users** — phone, username, passwordHash, balance, bonusBalance,
   totalWagered, referralCode, referredBy, referralPaid, firstDepositDone,
-  lastSpinAt, createdAt.
+  banned + banReason (admin suspension), lastSpinAt, createdAt.
 - **sessions** — token (pk), userId, expiresAt (30 days).
 - **transactions** — ledger: type (deposit/withdraw/bet/win/bonus/referral/
-  promo/spin/lootbox), amount, status (completed/processing), method,
-  reference, note.
+  promo/spin/lootbox/adjust/refund), amount, status
+  (completed/processing/pending/rejected), method, reference, note.
 - **game_rounds** — per-round record: game slug, bet, payout, multiplier,
   status (active/won/lost), jsonb `state` (engine-specific), createdAt.
 - **promo_codes / promo_redemptions** — code, amount, maxUses, uses + unique
@@ -182,6 +195,32 @@ To add a new game:
 - After any balance-changing API call, call `refresh()` (or `setBalances`) to
   keep the header balance in sync.
 - `api<T>(url, body?)` helper wraps fetch with JSON + `cache: "no-store"`.
+
+## 9b. Admin panel (`/admin` + `/api/admin/*`)
+
+The production control center for agents. Everything sits behind one shared
+secret: `Authorization: Bearer <ADMIN_TOKEN>` (`src/lib/admin.ts`).
+
+- **Frontend**: `src/app/admin/page.tsx` is the passcode gate + tab shell;
+  each tab is a component in `src/components/admin/` (Dashboard, Deposits,
+  Withdrawals, Users, Games, Sports, Transactions/ledger, Promos). Charts are
+  hand-rolled SVG (`Charts.tsx`) — no chart library. The passcode lives in
+  `sessionStorage` only.
+- **Dashboard** (`/api/admin/stats`) — KPI cards + 14-day series; GGR =
+  (game bets + sport stakes) − (game payouts + sport payouts).
+- **Payments** — deposits keep the strict SMS cross-check
+  (`src/lib/deposits.ts`); withdrawals are debited at request time and
+  settled by agents (`src/lib/withdrawals.ts`): *pay* marks completed,
+  *reject* refunds the real balance and writes a `refund` ledger row.
+- **Players** — search/detail/manual balance adjustment (`adjust` rows in the
+  ledger, never negative) and ban/unban. Banned users are excluded from
+  `getCurrentUser`, get 403 on login, and their sessions are deleted.
+- **Games** — per-game performance + a round audit feed over `game_rounds`.
+- **Sports** — exposure summary + tickets + a manual "settle due" sweep
+  (`src/lib/sports-settle.ts`, shared with the player's lazy settle).
+- **Promos** — create/delete codes (redemption history is preserved).
+- Demo data for local panel development: `node scripts/seed-demo.mjs`
+  (wipes & reseeds; local embedded Postgres via `node scripts/local-pg.mjs`).
 
 ## 10. Code style & checks
 

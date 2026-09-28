@@ -103,7 +103,8 @@ Live site inspected: `http://tolobirr.com` (Cassa.Bet-powered Next.js casino).
 | README + dev guide + rules + logs | done   |
 | npm install (dependency verify)   | done   |
 | lint / typecheck / build          | done ✓ |
-| Neon DB push                      | owner  |
+| Full production admin panel (3.00)| done ✓ |
+| Neon DB push (incl. banned column)| owner  |
 | Vercel deploy                     | owner  |
 | Git init + remote                 | owner  |
 
@@ -162,3 +163,50 @@ the "Leading indicators" table.
   guarded by the `x-bot-key: <TELEGRAM_BOT_TOKEN>` header.
 - BotFather still needs the site-bot **Domain** → `zemabirr-rho.vercel.app`
   (widget) and **Menu button URL** → `https://zemabirr-rho.vercel.app`.
+
+---
+
+## 2026-09-28 — Full production admin panel
+
+### 3.00 — Admin control center (this commit)
+- **`/admin` rebuilt** from a single deposit-approval list into a full
+  production panel (same `ADMIN_TOKEN` passcode): sticky tab bar with
+  **Dashboard · Deposits · Withdrawals · Players · Games · Sports · Ledger ·
+  Promos**, all mobile-friendly, URL-synced (`/admin?tab=…`).
+- **Dashboard** — KPI cards (players, deposits, withdrawals paid, bonus
+  given, wagered, paid out, GGR, sports exposure) + 14-day SVG charts
+  (cash flow, volume, daily GGR, signups) and clickable pending-queue alerts.
+- **Withdrawal settlement** (new) — `GET /api/admin/withdrawals` +
+  `POST …/settle {action: pay|reject}` backed by `src/lib/withdrawals.ts`.
+  Funds are debited at request time; *pay* marks completed, *reject* refunds
+  the real balance and writes a `refund` ledger row. Double-settle guarded.
+- **Player management** (new) — search by id/@username/phone, profile drawer
+  (balances, deposits/withdrawn, referrals, Telegram link, recent tx +
+  rounds), manual balance adjustment (`adjust` ledger rows, debits refuse to
+  go negative) and **ban/unban**:
+  - Schema: `users.banned` + `users.ban_reason` → run `npm run db:push`
+    against the production DB before deploying.
+  - Banned players are excluded from `getCurrentUser` (sessions die), get
+    `403 This account has been suspended` on login, and are blocked in
+    Telegram auto-login; banning deletes their session rows.
+- **Games tab** (new) — per-game rounds / wagered / paid out / GGR / RTP /
+  W-L + a filterable round audit feed (`/api/admin/games`, `/api/admin/rounds`).
+- **Sportsbook tab** (new) — exposure summary (open tickets, max exposure,
+  staked vs paid), ticket list with selections, and **⚡ Settle due now**
+  using the new shared `src/lib/sports-settle.ts` (player lazy-settle in
+  `/api/sports` now uses it too).
+- **Ledger tab** (new) — full transaction list with type/user filters and
+  pagination (`/api/admin/transactions`).
+- **Promo management** (new) — create/delete codes with usage counters
+  (`GET/POST/DELETE /api/admin/promos`); redemption history survives deletion.
+- **Deposits tab** — unchanged approval semantics (amount + SMS TX ID must
+  match), now with completed/rejected filters; `admin-bot.mjs` endpoints
+  untouched.
+- Footer: discreet **Agent Panel** link.
+- Dev tooling: `scripts/local-pg.mjs` (embedded Postgres for previews) and
+  `scripts/seed-demo.mjs` (realistic 14-day demo dataset; wipes tables).
+
+> Verification: `npm run typecheck` / `lint` clean, `npm run build` succeeds
+> (16 `/api/admin/*` routes + `/admin`), and every mutation was smoke-tested
+> end-to-end (approve/reject, pay/reject-with-refund, adjust, ban→403→unban,
+> promo CRUD, settle-due).

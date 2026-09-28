@@ -56,6 +56,7 @@ export default function Footer() {
         <div className="flex items-center gap-4">
           <Link href="/terms" className="hover:text-white">Terms and Conditions</Link>
           <Link href="/privacy" className="hover:text-white">Privacy Policy</Link>
+          <Link href="/admin" className="hover:text-white">Agent Panel</Link>
           <span className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-lose text-[11px] font-black text-white">21+</span>
         </div>
       </div>

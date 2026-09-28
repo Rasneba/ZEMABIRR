@@ -163,6 +163,7 @@ export async function authTelegramUser(tg: TgUser, phone?: string | null) {
     return;
   }
 
+  if (user.banned === 1) throw new Error("banned");
   if (phone && user.phone.startsWith("tg:")) {
     await db.update(users).set({ phone }).where(eq(users.id, user.id));
   }

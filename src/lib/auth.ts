@@ -63,7 +63,7 @@ export async function getCurrentUser(): Promise<SafeUser | null> {
     .select({ user: users })
     .from(sessions)
     .innerJoin(users, eq(users.id, sessions.userId))
-    .where(and(eq(sessions.token, token), gt(sessions.expiresAt, new Date())))
+    .where(and(eq(sessions.token, token), gt(sessions.expiresAt, new Date()), eq(users.banned, 0)))
     .limit(1);
   const u = rows[0]?.user;
   if (!u) return null;

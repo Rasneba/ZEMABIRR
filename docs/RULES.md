@@ -146,6 +146,30 @@ Progress is purely **total wagered** (`total_wagered`), no opt-in:
 Higher tiers unlock priority support, personal account manager, level-up
 rewards (UI).
 
+## 7b. Admin operations (`/admin`, `/api/admin/*`)
+
+All admin endpoints require `Authorization: Bearer <ADMIN_TOKEN>`
+(`src/lib/admin.ts`).
+
+- **Deposits** — approve only when the amount **and** SMS transaction ID
+  match the pending request; first-deposit bonus + referral reward are
+  credited at approval time (section 6).
+- **Withdrawals** — debited from the real balance when requested
+  (`processing`). An agent marks them **paid** (completed, money sent
+  off-site) or **rejects** them, which refunds the exact amount to the real
+  balance and records a `refund` ledger row. A settled withdrawal cannot be
+  settled again.
+- **Players** — admins may apply manual balance corrections (real or bonus,
+  logged as `adjust` rows; debits are refused below zero) and ban/unban.
+  A banned player: active sessions destroyed, `/api/me` returns no user,
+  login returns `403 This account has been suspended`, Telegram auto-login
+  blocked. The ban reason is stored on the account.
+- **Promo codes** — admins create/delete codes; rewards always credit the
+  bonus balance, one redemption per player per code (section 6).
+- **Sportsbook** — the panel exposes live exposure (Σ stake × odds of open
+  tickets) and a manual sweep that settles every ticket past its settle time
+  (same deterministic results as the lazy settle).
+
 ## 8. Anti-abuse & engineering safeguards
 
 - **Atomic settlements**: `settleRound` only settles active rounds;
