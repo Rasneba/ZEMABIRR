@@ -94,6 +94,25 @@ export type Selection = {
   result?: "won" | "lost";
 };
 
+export const smsWebhooks = pgTable(
+  "sms_webhooks",
+  {
+    id: serial("id").primaryKey(),
+    txid: text("txid"),
+    amount: doublePrecision("amount").notNull().default(0),
+    type: text("type").notNull().default("Deposit"),
+    senderName: text("sender_name"),
+    senderPhone: text("sender_phone"),
+    rawText: text("raw_text").notNull(),
+    userId: integer("user_id"),
+    depositId: integer("deposit_id"),
+    status: text("status").notNull().default("pending"), // pending | credited | ignored
+    note: text("note"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("sms_txid_idx").on(t.txid)]
+);
+
 export const sportBets = pgTable("sport_bets", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),

@@ -11,10 +11,12 @@ import Games from "@/components/admin/Games";
 import Transactions from "@/components/admin/Transactions";
 import Promos from "@/components/admin/Promos";
 import Sports from "@/components/admin/Sports";
+import Sms from "@/components/admin/Sms";
 
 const TABS = [
   { id: "dashboard", label: "Dashboard", icon: "📊" },
   { id: "deposits", label: "Deposits", icon: "💳" },
+  { id: "sms", label: "Telebirr", icon: "📟" },
   { id: "withdrawals", label: "Withdrawals", icon: "🏦" },
   { id: "users", label: "Players", icon: "👥" },
   { id: "games", label: "Games", icon: "🎰" },
@@ -72,6 +74,7 @@ function AdminShell() {
       <div className="mx-auto max-w-7xl px-4 py-6">
         {tab === "dashboard" && <Dashboard goTo={goTo} />}
         {tab === "deposits" && <Deposits />}
+        {tab === "sms" && <Sms />}
         {tab === "withdrawals" && <Withdrawals />}
         {tab === "users" && <Users />}
         {tab === "games" && <Games />}
