@@ -69,14 +69,17 @@ export default function GameView({ slug }: { slug: string }) {
   const game = getGame(slug);
   const { user } = useApp();
   if (!game) return null;
+  const isCrash = game.engine === "crash";
   return (
     <div>
-      <div className="mb-3 flex items-center gap-2 text-sm">
-        <Link href="/casino" className="text-mute hover:text-white">Casino</Link>
-        <span className="text-mute">/</span>
-        <span className="font-bold">{game.name}</span>
-        <span className="ml-auto rounded bg-white/5 px-2 py-0.5 text-xs text-mute">{game.provider}</span>
-      </div>
+      {!isCrash && (
+        <div className="mb-3 flex items-center gap-2 text-sm">
+          <Link href="/casino" className="text-mute hover:text-white">Casino</Link>
+          <span className="text-mute">/</span>
+          <span className="font-bold">{game.name}</span>
+          <span className="ml-auto rounded bg-white/5 px-2 py-0.5 text-xs text-mute">{game.provider}</span>
+        </div>
+      )}
       {game.engine === "crash" && <Crash key={game.slug} game={game} />}
       {game.engine === "mines" && <Mines />}
       {game.engine === "chicken" && <Chicken />}
@@ -87,7 +90,7 @@ export default function GameView({ slug }: { slug: string }) {
       {game.engine === "roulette" && <Roulette game={game} />}
       {game.engine === "keno" && <Keno game={game} />}
       {game.engine === "baccarat" && <Baccarat game={game} />}
-      <MyBets key={user?.id ?? "anon"} slug={slug} />
+      {!isCrash && <MyBets key={user?.id ?? "anon"} slug={slug} />}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { randomInt } from "crypto";
 import { getCurrentUser, json, unauthorized } from "@/lib/auth";
 import { crashMultiplierAt, getGame } from "@/lib/games";
-import { getActiveRound, settleRound, startRound } from "@/lib/rounds";
+import { activeRoundCount, cancelRound, getActiveRound, settleRound, startRound } from "@/lib/rounds";
 
 export const dynamic = "force-dynamic";
 
@@ -22,16 +22,28 @@ export async function POST(req: Request) {
   const action = String(body.action ?? "");
 
   if (action === "start") {
+    const autoNum = Number(body.auto);
+    const auto = Number.isFinite(autoNum) && autoNum >= 1.01 ? Math.floor(autoNum * 100) / 100 : null;
     const existing = await getActiveRound(user.id, game);
     if (existing) {
       const st = existing.state as CrashState;
-      // allow resume if still flying
-      if (crashMultiplierAt(Date.now() - st.startedAt) < st.crashPoint)
-        return json({ error: "You already have an active round" }, 409);
+      const inFlight = crashMultiplierAt(Date.now() - st.startedAt) < st.crashPoint;
+      if (inFlight) {
+        // Second bet panel joining the SAME flight (Aviator-style dual bets).
+        if ((await activeRoundCount(user.id, game)) >= 2)
+          return json({ error: "Maximum two bets per round" }, 409);
+        const state: CrashState = { crashPoint: st.crashPoint, startedAt: st.startedAt, auto };
+        const res = await startRound(user.id, game, body.bet, state);
+        if ("error" in res) return json({ error: res.error }, 400);
+        return json({
+          roundId: res.round.id,
+          startsIn: Math.max(0, st.startedAt - Date.now()),
+          balance: res.balance,
+          bonusBalance: res.bonusBalance,
+        });
+      }
       await settleRound(existing.id, user.id, "lost", st.crashPoint, existing.bet);
     }
-    const autoNum = Number(body.auto);
-    const auto = Number.isFinite(autoNum) && autoNum >= 1.01 ? Math.floor(autoNum * 100) / 100 : null;
     const state: CrashState = { crashPoint: genCrashPoint(), startedAt: Date.now() + 1200, auto };
     const res = await startRound(user.id, game, body.bet, state);
     if ("error" in res) return json({ error: res.error }, 400);
@@ -39,6 +51,17 @@ export async function POST(req: Request) {
   }
 
   const id = Number(body.roundId);
+
+  if (action === "cancel") {
+    const round = await getActiveRound(user.id, game, id);
+    if (!round) return json({ status: "settled" });
+    const st = round.state as CrashState;
+    if (Date.now() >= st.startedAt) return json({ error: "Round already started" }, 400);
+    const ok = await cancelRound(round.id, user.id, round.bet);
+    if (!ok) return json({ status: "settled" });
+    return json({ status: "cancelled" });
+  }
+
   const round = await getActiveRound(user.id, game, id);
   if (!round) return json({ status: "settled" });
   const st = round.state as CrashState;

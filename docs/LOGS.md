@@ -210,3 +210,40 @@ the "Leading indicators" table.
 > (16 `/api/admin/*` routes + `/admin`), and every mutation was smoke-tested
 > end-to-end (approve/reject, pay/reject-with-refund, adjust, ban→403→unban,
 > promo CRUD, settle-due).
+## 2026-09-29 — Aviator-style crash skin (frontend + crash API)
+
+Rebuilt the crash engine UI (`src/components/games/Crash.tsx`, used by
+`aviator` and `sky-jet`) to mirror the classic Spribe Aviator screen:
+
+- Shell header: red italic wordmark, `ETB` balance read-out, bets-list toggle.
+- Left rail: **All Bets / Previous / Top** tabs, `n/n Bets` + `Total win ETB`
+  summary, Player / Bet ETB / X / Win ETB columns with green ring avatars and
+  masked names (`3***4`); simulated live players join each round and cash out
+  as the multiplier climbs; Previous pulls the player's own history.
+- Coloured round-history strip (blue <2x, purple 2–10x, pink ≥10x) with the
+  `•••` pill.
+- Black sunburst stage (`repeating-conic-gradient` rays from bottom-left),
+  red plane parked at the origin, riding a rising red curve in flight,
+  fly-away animation on crash, big centre multiplier, FLEW AWAY! banner,
+  waiting-for-next-round progress bar, live-players badge, ZEMA lockup with
+  provably-fair badge (replaces the UFC/Spribe artwork).
+- Dual bet panels: Bet/Auto tabs, −/+ stepper, quick chips 16/40/80/400,
+  green `Bet N ETB` / `Cash Out N ETB` buttons, orange Cancel while waiting,
+  Auto Cash Out + Auto Bet toggles (auto-bet re-stakes after each settle).
+- Footer: Provably Fair Game / Powered by ZEMA GAMES.
+
+Crash API (`src/app/api/games/crash/route.ts`, `src/lib/rounds.ts`):
+
+- Two simultaneous bets per round are now allowed — the second `start`
+  mirrors the active round's `crashPoint` + `startedAt` so both panels ride
+  the same flight; a third bet is refused with 409.
+- New `action: "cancel"` refunds the stake while the round is still waiting
+  (`cancelRound`); the round row is zeroed (`bet 0`) so wagering stats stay
+  clean.
+- `GameView`: crash games render full-bleed without the breadcrumb and
+  without the duplicate "My bets" card (the rail's Previous tab covers it).
+
+> Verification: `typecheck` + `lint` clean on touched files; crash flow
+> smoke-tested end-to-end against embedded Postgres (dual bet on one flight,
+> third bet 409, auto cash-out, manual cash-out, cancel + refund; balance
+> math exact).

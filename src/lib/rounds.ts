@@ -21,6 +21,27 @@ export async function getActiveRound(userId: number, game: string, id?: number) 
   return round ?? null;
 }
 
+/** How many rounds are still active for a user in a game (crash allows 2). */
+export async function activeRoundCount(userId: number, game: string) {
+  const rows = await db
+    .select({ id: gameRounds.id })
+    .from(gameRounds)
+    .where(and(eq(gameRounds.userId, userId), eq(gameRounds.game, game), eq(gameRounds.status, "active")));
+  return rows.length;
+}
+
+/** Refund a round that has not taken off yet (Aviator-style cancel). */
+export async function cancelRound(roundId: number, userId: number, stake: number) {
+  const upd = await db
+    .update(gameRounds)
+    .set({ status: "lost", payout: 0, multiplier: 0, bet: 0 })
+    .where(and(eq(gameRounds.id, roundId), eq(gameRounds.userId, userId), eq(gameRounds.status, "active")))
+    .returning({ id: gameRounds.id });
+  if (!upd[0]) return false;
+  if (stake > 0) await credit(userId, stake);
+  return true;
+}
+
 /** Atomically settle an active round. Returns null if it was already settled. */
 export async function settleRound(
   roundId: number,
