@@ -23,8 +23,6 @@ export const KL = {
   epoch: Date.UTC(2026, 8, 1, 0, 0, 0),
 } as const;
 
-export const kenoCycleMs = () => KL.cycleMs;
-
 export function kenoRoundTimes(id: number) {
   const start = KL.epoch + id * KL.cycleMs;
   const betEnd = start + KL.betMs;

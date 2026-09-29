@@ -10,7 +10,9 @@ export const KENO_SLUG = KL.slug;
 
 // ---------------------------------------------------------------- provably fair
 function secret() {
-  return process.env.KENO_SECRET || process.env.FAST_KENO_SECRET || createHash("sha256").update(`keno:${process.env.DATABASE_URL ?? "dev"}`).digest("hex");
+  const s = process.env.KENO_SECRET ?? process.env.FAST_KENO_SECRET;
+  if (!s) throw new Error("KENO_SECRET (or FAST_KENO_SECRET) must be set — see .env.example");
+  return s;
 }
 
 const sha256 = (s: string) => createHash("sha256").update(s).digest("hex");

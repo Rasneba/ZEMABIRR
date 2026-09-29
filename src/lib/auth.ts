@@ -31,7 +31,7 @@ export async function createSession(userId: number) {
     sameSite: "lax",
     path: "/",
     expires: expiresAt,
-    secure: false,
+    secure: process.env.NODE_ENV === "production",
   });
 }
 

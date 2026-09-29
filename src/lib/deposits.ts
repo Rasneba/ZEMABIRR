@@ -25,20 +25,31 @@ export async function approveDeposit(id: number, amount: number, txid: string) {
     return { error: "Transaction ID does not match the shared SMS" };
   }
 
+  // Atomically claim the deposit ("pending" → "completed"); the single-row
+  // update is the source of truth so two agents approving at once can only
+  // credit once. Validation above is safe — amount/note never change.
+  const claimed = await db
+    .update(transactions)
+    .set({ status: "completed" })
+    .where(and(eq(transactions.id, id), eq(transactions.type, "deposit"), eq(transactions.status, "pending")))
+    .returning({ id: transactions.id });
+  if (!claimed[0]) return { error: "Deposit was already settled by another agent" };
+
   await credit(row.userId, r2(row.amount));
-  await db.update(transactions).set({ status: "completed" }).where(eq(transactions.id, row.id));
 
   // First-deposit 200% welcome bonus (max Br 10,000) + referral reward.
-  const claimed = await db
+  // The `firstDepositDone=0` guard keeps the bonus single-fire even if this
+  // function somehow runs twice.
+  const bonus = r2(Math.min(r2(row.amount) * 2, 10000));
+  const first = await db
     .update(users)
     .set({ firstDepositDone: 1 })
     .where(and(eq(users.id, row.userId), eq(users.firstDepositDone, 0)))
     .returning({ referredBy: users.referredBy });
-  if (claimed[0]) {
-    const bonus = r2(Math.min(r2(row.amount) * 2, 10000));
+  if (first[0]) {
     await credit(row.userId, bonus, true);
     await addTx(row.userId, "bonus", bonus, { note: "200% welcome bonus" });
-    const refId = claimed[0].referredBy;
+    const refId = first[0].referredBy;
     if (refId) {
       const paid = await db
         .update(users)
@@ -51,7 +62,7 @@ export async function approveDeposit(id: number, amount: number, txid: string) {
       }
     }
   }
-  return { ok: true, bonus: claimed[0] ? r2(Math.min(r2(row.amount) * 2, 10000)) : 0 };
+  return { ok: true, bonus: first[0] ? bonus : 0 };
 }
 
 export async function rejectDeposit(id: number) {

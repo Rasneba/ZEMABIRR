@@ -2,28 +2,45 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { api, useApp } from "../AppProvider";
 import { getGame } from "@/lib/games";
 import { fmt } from "@/lib/brand";
-import Crash from "./Crash";
-import Mines from "./Mines";
-import Chicken from "./Chicken";
-import FastKeno from "./FastKeno";
-import Roulette from "./Roulette";
-import Keno from "./Keno";
-import Dice from "./Dice";
-import Plinko from "./Plinko";
-import Blackjack from "./Blackjack";
+
+// Each game is loaded on demand — the huge PE bundles (Keno, crash canvas,
+// Blackjack deck, …) no longer ship with every game page.
+const Crash = dynamic(() => import("./Crash"), { ssr: false });
+const Mines = dynamic(() => import("./Mines"), { ssr: false });
+const Chicken = dynamic(() => import("./Chicken"), { ssr: false });
+const FastKeno = dynamic(() => import("./FastKeno"), { ssr: false });
+const Roulette = dynamic(() => import("./Roulette"), { ssr: false });
+const Keno = dynamic(() => import("./Keno"), { ssr: false });
+const Dice = dynamic(() => import("./Dice"), { ssr: false });
+const Plinko = dynamic(() => import("./Plinko"), { ssr: false });
+const Blackjack = dynamic(() => import("./Blackjack"), { ssr: false });
 
 type Row = { id: number; bet: number; payout: number; multiplier: number; status: string; createdAt: string };
 
+// Self-polling so the 8s ticker no longer re-renders the entire game subtree.
+// Refetches immediately when the balance changes (debet/credit), otherwise 10s.
 function MyBets({ slug }: { slug: string }) {
   const { user } = useApp();
   const [rows, setRows] = useState<Row[]>([]);
   useEffect(() => {
     if (!user) return;
-    api<{ rows: Row[] }>(`/api/history?kind=games&game=${slug}`).then((d) => setRows(d.rows ?? []));
-  }, [user, slug]);
+    let cancelled = false;
+    const load = () =>
+      api<{ rows: Row[] }>(`/api/history?kind=games&game=${slug}`).then((d) => {
+        if (!cancelled) setRows(d.rows ?? []);
+      });
+    load();
+    const t = setInterval(load, 10000);
+    return () => {
+      cancelled = true;
+      clearInterval(t);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, user?.balance, slug]);
   if (!user) return null;
   return (
     <div className="mt-4 rounded-2xl bg-card p-4">
@@ -48,13 +65,9 @@ function MyBets({ slug }: { slug: string }) {
 }
 
 export default function GameView({ slug }: { slug: string }) {
-  const game = getGame(slug)!;
-  const [tick, setTick] = useState(0);
+  const game = getGame(slug);
   const { user } = useApp();
-  useEffect(() => {
-    const t = setInterval(() => setTick((x) => x + 1), 8000);
-    return () => clearInterval(t);
-  }, []);
+  if (!game) return null;
   return (
     <div>
       <div className="mb-3 flex items-center gap-2 text-sm">
@@ -72,7 +85,7 @@ export default function GameView({ slug }: { slug: string }) {
       {game.engine === "plinko" && <Plinko game={game} />}
       {game.engine === "blackjack" && <Blackjack game={game} />}
       {game.engine === "roulette" && <Roulette game={game} />}
-      {game.engine !== "fastkeno" && game.engine !== "keno" && <MyBets key={`${tick}-${user?.balance}`} slug={slug} />}
+      {game.engine !== "fastkeno" && game.engine !== "keno" && <MyBets key={user?.id ?? "anon"} slug={slug} />}
     </div>
   );
 }

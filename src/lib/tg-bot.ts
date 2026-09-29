@@ -2,12 +2,14 @@ import "server-only";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { users } from "@/db/schema";
+import { safeEqual } from "@/lib/admin";
 
 // Requests from our own Telegram bot carry the site bot token as a shared
 // secret so arbitrary callers cannot trigger account changes over HTTP.
 export function isBotCall(req: Request): boolean {
   const token = process.env.TELEGRAM_BOT_TOKEN;
-  return Boolean(token && req.headers.get("x-bot-key") === token);
+  const key = req.headers.get("x-bot-key");
+  return Boolean(token && key && safeEqual(key, token));
 }
 
 export function botTgId(body: Record<string, unknown>): string | null {

@@ -47,11 +47,6 @@ export function getWebApp(): TgWebApp | null {
   return window.Telegram?.WebApp ?? null;
 }
 
-export function isTelegramBrowser(): boolean {
-  const wa = getWebApp();
-  return Boolean(wa?.initData);
-}
-
 export function bootTelegram(): void {
   const wa = getWebApp();
   if (!wa) return;

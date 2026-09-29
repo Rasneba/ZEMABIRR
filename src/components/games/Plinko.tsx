@@ -34,12 +34,17 @@ export default function Plinko({ game }: { game: Game }) {
   const anim = useRef({ moves: [] as number[], start: 0, bin: -1 });
   const done = useRef(true);
   const raf = useRef(0);
+  const doneTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => {
+    if (doneTimer.current) clearTimeout(doneTimer.current);
+  }, []);
 
   async function drop() {
     if (busy) return;
     setBusy(true);
     setResult(null);
-    const d = await api<{ rows: number; bin: number; multiplier: number; payout: number }>("/api/games/plinko", { game: game.slug, bet: Number(bet) });
+    const d = await api<{ bin: number; multiplier: number; payout: number }>("/api/games/plinko", { game: game.slug, bet: Number(bet) });
     if (d.error) {
       setBusy(false);
       return toast(d.error, "error");
@@ -52,7 +57,7 @@ export default function Plinko({ game }: { game: Game }) {
     done.current = false;
     anim.current = { moves: increments, start: performance.now(), bin: d.bin };
     setDrops((x) => [{ bin: d.bin, mult: d.multiplier }, ...x].slice(0, 20));
-    setTimeout(() => {
+    doneTimer.current = setTimeout(() => {
       setResult(d);
       setBusy(false);
       if (d.payout > 0) toast(`Bin ${d.bin} · ${d.multiplier.toFixed(2)}x · +${fmt(d.payout)}`, "success");
@@ -158,7 +163,6 @@ export default function Plinko({ game }: { game: Game }) {
         c.fill();
       }
       if (!done.current) raf.current = requestAnimationFrame(draw);
-      if (done.current && anim.current.bin >= 0) c.fillStyle = "rgba(0,0,0,0)";
     }
     draw();
     return () => cancelAnimationFrame(raf.current);

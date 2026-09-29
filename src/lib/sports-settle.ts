@@ -22,6 +22,7 @@ export async function settleDueBets(userId?: number) {
       ...s,
       result: selectionWins(s.market, s.pick, s.matchId) ? "won" : "lost",
     })) as Selection[];
+    if (sels.length === 0) continue;
     const won = sels.every((s) => s.result === "won");
     const payout = won ? r2(b.stake * b.totalOdds) : 0;
     const upd = await db

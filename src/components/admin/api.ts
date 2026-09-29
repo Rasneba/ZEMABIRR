@@ -24,7 +24,9 @@ export async function adminCall<T = Record<string, unknown>>(url: string, body?:
       body: body === undefined ? undefined : JSON.stringify(body),
       cache: "no-store",
     });
-    return (await res.json().catch(() => ({ error: "Network error" }))) as T & { error?: string };
+    if (!res.ok && res.status === 401) clearToken();
+    const d = (await res.json().catch(() => ({ error: "Network error" }))) as T & { error?: string };
+    return !res.ok && !d.error ? { ...d, error: `Request failed (${res.status})` } : d;
   } catch {
     return { error: "Network error" } as T & { error?: string };
   }

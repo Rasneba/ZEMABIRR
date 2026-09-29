@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api, useApp } from "../AppProvider";
 import { BalanceLine, LoginToPlay } from "./shared";
 import { ROULETTE_RED, ROULETTE_WHEEL, type Game } from "@/lib/games";
@@ -22,6 +22,11 @@ export default function Roulette({ game }: { game: Game }) {
   const [last, setLast] = useState<number[]>([]);
   const [result, setResult] = useState<{ n: number; payout: number } | null>(null);
   const total = Object.values(bets).reduce((a, b) => a + b, 0);
+  const spinTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => {
+    if (spinTimer.current) clearTimeout(spinTimer.current);
+  }, []);
 
   const add = (k: string) => !spinning && setBets((b) => ({ ...b, [k]: (b[k] ?? 0) + chip }));
 
@@ -38,7 +43,7 @@ export default function Roulette({ game }: { game: Game }) {
     const idx = ROULETTE_WHEEL.indexOf(d.result);
     const target = 360 - (idx * SEG + SEG / 2);
     setRotation((r) => r - (r % 360) + 360 * 5 + target);
-    setTimeout(() => {
+    spinTimer.current = setTimeout(() => {
       setSpinning(false);
       setResult({ n: d.result, payout: d.payout });
       setLast((l) => [d.result, ...l].slice(0, 12));

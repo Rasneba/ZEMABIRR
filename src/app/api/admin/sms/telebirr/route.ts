@@ -1,4 +1,5 @@
 import { json } from "@/lib/auth";
+import { safeEqual } from "@/lib/admin";
 import { ingestSms } from "@/lib/sms";
 
 export const dynamic = "force-dynamic";
@@ -8,9 +9,9 @@ const EXPECTED = process.env.ADMIN_TOKEN ?? "";
 function authed(req: Request): boolean {
   if (!EXPECTED) return false;
   const bearer = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
-  if (bearer && bearer === EXPECTED) return true;
+  if (bearer && safeEqual(bearer, EXPECTED)) return true;
   const header = req.headers.get("x-sms-secret") ?? req.headers.get("x-api-key") ?? "";
-  if (header === EXPECTED) return true;
+  if (header && safeEqual(header, EXPECTED)) return true;
   return false;
 }
 

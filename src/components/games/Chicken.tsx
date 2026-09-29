@@ -26,7 +26,8 @@ export default function Chicken() {
       setLevel(d.round.level);
       setStep(d.round.step);
     });
-  }, [user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   useEffect(() => {
     const el = trackRef.current?.querySelector<HTMLElement>(`[data-lane="${step}"]`);

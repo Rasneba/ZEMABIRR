@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { bootTelegram, ensureTelegramSdk, getWebApp, requestPhoneNumber } from "@/lib/telegram";
 
 export type User = {
@@ -128,23 +128,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return true;
   }, [user]);
 
-  return (
-    <AppCtx.Provider
-      value={{
-        user,
-        loading,
-        refresh,
-        setBalances,
-        authMode,
-        openAuth: setAuthMode,
-        walletOpen,
-        openWallet: setWalletOpen,
-        toast,
-        toasts,
-        requireAuth,
-      }}
-    >
-      {children}
-    </AppCtx.Provider>
+  const ctx = useMemo<Ctx>(
+    () => ({
+      user,
+      loading,
+      refresh,
+      setBalances,
+      authMode,
+      openAuth: setAuthMode,
+      walletOpen,
+      openWallet: setWalletOpen,
+      toast,
+      toasts,
+      requireAuth,
+    }),
+    [user, loading, refresh, setBalances, authMode, walletOpen, toast, toasts, requireAuth]
   );
+
+  return <AppCtx.Provider value={ctx}>{children}</AppCtx.Provider>;
 }

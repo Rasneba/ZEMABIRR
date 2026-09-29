@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, count, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { getCurrentUser, json } from "@/lib/auth";
@@ -12,8 +12,15 @@ export async function GET() {
   // Pay out any finished Fast Keno tickets so balances are always current.
   await fkSettleUser(user.id);
   user = (await getCurrentUser()) ?? user;
-  const refs = await db.select({ p: users.referralPaid }).from(users).where(eq(users.referredBy, user.id));
+  const [inv] = await db
+    .select({ n: count() })
+    .from(users)
+    .where(eq(users.referredBy, user.id));
+  const [dep] = await db
+    .select({ n: count() })
+    .from(users)
+    .where(and(eq(users.referredBy, user.id), eq(users.referralPaid, 1)));
   return json({
-    user: { ...user, invited: refs.length, invitedDeposited: refs.filter((r) => r.p === 1).length },
+    user: { ...user, invited: Number(inv?.n ?? 0), invitedDeposited: Number(dep?.n ?? 0) },
   });
 }

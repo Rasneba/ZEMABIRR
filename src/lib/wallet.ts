@@ -38,8 +38,8 @@ export async function credit(userId: number, amount: number, toBonus = false) {
   const res = toBonus
     ? await db.execute(sql`update users set bonus_balance = bonus_balance + ${x} where id = ${userId} returning balance, bonus_balance`)
     : await db.execute(sql`update users set balance = balance + ${x} where id = ${userId} returning balance, bonus_balance`);
-  const row = res.rows[0] as BalRow;
-  return { balance: row.balance, bonusBalance: row.bonus_balance };
+  const row = res.rows[0] as BalRow | undefined;
+  return { balance: row?.balance ?? 0, bonusBalance: row?.bonus_balance ?? 0 };
 }
 
 export async function addTx(

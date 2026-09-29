@@ -7,7 +7,6 @@ import { settleRound } from "./rounds";
 import {
   FK,
   FK_DRAW_MS,
-  FK_PAYTABLE,
   fkHits,
   fkMultiplier,
   fkRoundTimes,
@@ -25,7 +24,9 @@ export const FK_SIM_ENABLED = process.env.FAST_KENO_SIM_PLAYERS !== "0";
 
 // ---------------------------------------------------------------- provably fair
 function secret() {
-  return process.env.FAST_KENO_SECRET || createHash("sha256").update(`fk:${process.env.DATABASE_URL ?? "dev"}`).digest("hex");
+  const s = process.env.FAST_KENO_SECRET ?? process.env.KENO_SECRET;
+  if (!s) throw new Error("FAST_KENO_SECRET (or KENO_SECRET) must be set — see .env.example");
+  return s;
 }
 
 const sha256 = (s: string) => createHash("sha256").update(s).digest("hex");
@@ -185,5 +186,3 @@ export async function fkSettleUser(userId: number) {
     await settleRound(t.id, userId, mult > 0 ? "won" : "lost", mult, t.bet, { ...st, drawn, hits });
   }
 }
-
-export { FK_PAYTABLE };

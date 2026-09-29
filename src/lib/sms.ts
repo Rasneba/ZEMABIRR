@@ -4,7 +4,6 @@ import { and, desc, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { smsWebhooks, transactions, users } from "@/db/schema";
 import { parseTelebirrSMS } from "@/lib/telebirr";
-import { normalizePhone } from "@/lib/telegram-auth";
 import { approveDeposit } from "@/lib/deposits";
 import { r2 } from "@/lib/brand";
 
@@ -24,7 +23,7 @@ function phoneMatching(raw: string | undefined): string | null {
 }
 
 async function matchUser(phone: string | undefined): Promise<number | null> {
-  const norm = phoneMatching(phone) ?? normalizePhone(phone);
+  const norm = phoneMatching(phone);
   if (!norm) return null;
   const [u] = await db.select({ id: users.id }).from(users).where(eq(users.phone, norm)).limit(1);
   return u?.id ?? null;
@@ -128,7 +127,7 @@ export async function creditSms(id: number) {
   if (res.error) return { error: res.error };
 
   await db.update(smsWebhooks).set({ status: "credited", depositId }).where(eq(smsWebhooks.id, row.id));
-  return { ok: true, depositId, bonus: res.bonus ?? 0, userId: row.userId ?? depositId };
+  return { ok: true, depositId, bonus: res.bonus ?? 0, userId: row.userId ?? null };
 }
 
 export async function ignoreSms(id: number) {
@@ -137,6 +136,11 @@ export async function ignoreSms(id: number) {
   if (row.status !== "pending") return { error: `SMS already ${row.status}` };
   await db.update(smsWebhooks).set({ status: "ignored" }).where(eq(smsWebhooks.id, id));
   return { ok: true };
+}
+
+export async function countPendingSms() {
+  const [row] = await db.select({ n: sql<number>`count(*)` }).from(smsWebhooks).where(eq(smsWebhooks.status, "pending"));
+  return Number(row?.n ?? 0);
 }
 
 export async function listSms(status: string) {

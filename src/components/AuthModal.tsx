@@ -97,6 +97,12 @@ export default function AuthModal() {
     s.setAttribute("data-request-access", "write");
     s.setAttribute("data-onauth", "onTelegramLogin(user)");
     holder.appendChild(s);
+    return () => {
+      window.onTelegramLogin = undefined;
+      const el = document.getElementById("zb-tg-widget");
+      if (el) el.innerHTML = "";
+      s.remove();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authMode, tgBot]);
 

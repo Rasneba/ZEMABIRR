@@ -17,7 +17,7 @@ type Tx = {
   createdAt: string;
 };
 
-const TYPES = ["all", "deposit", "withdraw", "win", "bonus", "promo", "referral", "spin", "adjust", "refund"];
+const TYPES = ["all", "deposit", "withdraw", "win", "bonus", "promo", "referral", "spin", "lootbox", "adjust", "refund"];
 
 export default function Transactions() {
   const [type, setType] = useState("all");

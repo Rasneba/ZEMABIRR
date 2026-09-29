@@ -30,7 +30,8 @@ export default function Mines() {
       setCells(c);
       setRevealed(d.round.revealed.length);
     });
-  }, [user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   function revealAll(mineList: number[], hit?: number) {
     setCells((prev) => prev.map((c, i) => (i === hit ? "mine-hit" : mineList.includes(i) ? "mine" : c === "gem" ? "gem" : "gem-dim")));

@@ -9,7 +9,6 @@ export type Game = {
   provider: string;
   badge?: "HOT" | "NEW" | "TOP";
   accent: string;
-  kenoSpeed?: number;
   crashTheme?: "plane" | "jet";
 };
 
@@ -141,10 +140,6 @@ export const PLINKO_TABLE = [
   13.0, 7.0, 3.7, 2.4, 1.8, 1.3, 1.05, 0.75, 0.6,
   0.75, 1.05, 1.3, 1.8, 2.4, 3.7, 7.0, 13.0,
 ];
-export function plinkoPaytable(rows: number) {
-  // spread `rows` drops (view hint) — payouts map to the bin at index rows.
-  return PLINKO_TABLE;
-}
 
 // ---------- Blackjack ----------
 export const BJ_RANKS = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
@@ -160,7 +155,4 @@ export function scoreHand(cards: string[]): number {
   }
   for (let i = 0; i < aces; i++) sum += sum + 11 <= 21 ? 11 : 1;
   return sum;
-}
-export function cardFace(rank: string, suit: string) {
-  return `${rank}${suit}`;
 }
