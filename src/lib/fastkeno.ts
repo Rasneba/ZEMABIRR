@@ -7,7 +7,7 @@ export const FK = {
   draw: 20, // balls drawn per round
   maxPicks: 10, // numbers per ticket (1..10)
   betMs: 30_000, // betting window
-  drawMs: 90_000, // common draw duration: 90s for the 20-ball draw (ball every 4.5s)
+  drawMs: 20_000, // common draw duration: 20s for the 20-ball draw (1 ball every second)
   resultMs: 4_000, // results shown before next round
   minBet: 1,
   maxBet: 10_000,
@@ -17,7 +17,7 @@ export const FK = {
   epoch: Date.UTC(2026, 7, 16, 0, 0, 0),
 } as const;
 
-// Single common draw duration — no per-user draw speed option (fixed at 90s for 20 balls).
+// Single common draw duration — 20 balls drawn over 20s (1 ball per second).
 export const FK_DRAW_MS: number = FK.drawMs;
 
 /** Accept a draw duration, falling back to the fixed schedule. */

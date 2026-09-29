@@ -14,7 +14,6 @@ const Mines = dynamic(() => import("./Mines"), { ssr: false });
 const Chicken = dynamic(() => import("./Chicken"), { ssr: false });
 const FastKeno = dynamic(() => import("./FastKeno"), { ssr: false });
 const Roulette = dynamic(() => import("./Roulette"), { ssr: false });
-const Keno = dynamic(() => import("./Keno"), { ssr: false });
 const Dice = dynamic(() => import("./Dice"), { ssr: false });
 const Plinko = dynamic(() => import("./Plinko"), { ssr: false });
 const Blackjack = dynamic(() => import("./Blackjack"), { ssr: false });
@@ -80,12 +79,11 @@ export default function GameView({ slug }: { slug: string }) {
       {game.engine === "mines" && <Mines />}
       {game.engine === "chicken" && <Chicken />}
       {game.engine === "fastkeno" && <FastKeno />}
-      {game.engine === "keno" && <Keno />}
       {game.engine === "dice" && <Dice game={game} />}
       {game.engine === "plinko" && <Plinko game={game} />}
       {game.engine === "blackjack" && <Blackjack game={game} />}
       {game.engine === "roulette" && <Roulette game={game} />}
-      {game.engine !== "fastkeno" && game.engine !== "keno" && <MyBets key={user?.id ?? "anon"} slug={slug} />}
+      {game.engine !== "fastkeno" && <MyBets key={user?.id ?? "anon"} slug={slug} />}
     </div>
   );
 }

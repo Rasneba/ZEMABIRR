@@ -24,8 +24,8 @@ export const FK_SIM_ENABLED = process.env.FAST_KENO_SIM_PLAYERS !== "0";
 
 // ---------------------------------------------------------------- provably fair
 function secret() {
-  const s = process.env.FAST_KENO_SECRET ?? process.env.KENO_SECRET;
-  if (!s) throw new Error("FAST_KENO_SECRET (or KENO_SECRET) must be set — see .env.example");
+  const s = process.env.FAST_KENO_SECRET;
+  if (!s) throw new Error("FAST_KENO_SECRET must be set — see .env.example");
   return s;
 }
 

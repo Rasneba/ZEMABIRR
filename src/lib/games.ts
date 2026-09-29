@@ -1,4 +1,4 @@
-export type GameEngine = "crash" | "mines" | "chicken" | "keno" | "fastkeno" | "roulette" | "dice" | "plinko" | "blackjack";
+export type GameEngine = "crash" | "mines" | "chicken" | "fastkeno" | "roulette" | "dice" | "plinko" | "blackjack";
 
 export type Game = {
   slug: string;
@@ -20,12 +20,9 @@ export const GAMES: Game[] = [
   { slug: "blackjack", name: "Blackjack", engine: "blackjack", image: "/games/blackjack.svg", category: "Table", provider: "Zema Games Originals", badge: "TOP", accent: "#22c55e" },
   { slug: "babel-tower", name: "Babel Tower", engine: "mines", image: "/games/mines.jpg", category: "Instant", provider: "Zema Games Originals", accent: "#f97316" },
   { slug: "fast-keno", name: "Fast Keno", engine: "fastkeno", image: "/games/keno.jpg", category: "Keno", provider: "Zema Games Originals", badge: "HOT", accent: "#4cc27e" },
-  { slug: "keno", name: "Keno", engine: "keno", image: "/games/keno.jpg", category: "Keno", provider: "Zema Games Originals", badge: "TOP", accent: "#a855f7" },
   { slug: "mines", name: "Mines", engine: "mines", image: "/games/mines.jpg", category: "Instant", provider: "Zema Games Originals", badge: "HOT", accent: "#14b8a6" },
   { slug: "mini-roulette", name: "Mini Roulette", engine: "roulette", image: "/games/roulette.jpg", category: "Table", provider: "Zema Games Originals", accent: "#16a34a" },
   { slug: "double-roulette", name: "Double Roulette", engine: "roulette", image: "/games/roulette.jpg", category: "Table", provider: "Zema Games Originals", accent: "#10b981" },
-  { slug: "turbo-keno", name: "Turbo Keno", engine: "fastkeno", image: "/games/keno.jpg", category: "Keno", provider: "Zema Games Originals", accent: "#ec4899" },
-  { slug: "speed-keno", name: "Speed Keno", engine: "fastkeno", image: "/games/keno.jpg", category: "Keno", provider: "Zema Games Originals", badge: "NEW", accent: "#fbbf24" },
   { slug: "avia-masters", name: "Avia Masters", engine: "crash", image: "/games/avia.jpg", category: "Crash", provider: "Zema Games Originals", badge: "NEW", accent: "#0ea5e9", crashTheme: "jet" },
   { slug: "rocket-rush", name: "Rocket Rush", engine: "crash", image: "/games/avia.jpg", category: "Crash", provider: "Zema Games Originals", accent: "#8b5cf6", crashTheme: "jet" },
   { slug: "aviator", name: "Aviator", engine: "crash", image: "/games/avia.jpg", category: "Crash", provider: "Spribe", badge: "NEW", accent: "#f43f5e", crashTheme: "plane" },
@@ -56,23 +53,6 @@ export function chickenMultiplier(level: ChickenLevel, step: number) {
   const p = CHICKEN_LEVELS[level].p;
   return Math.floor((0.97 / Math.pow(1 - p, step)) * 100) / 100;
 }
-
-export const KENO_NUMBERS = 80;
-export const KENO_DRAW = 20;
-// Rich classic 80-ball keno paytable (10/80 drawn 20) tuned to ≈75–96.7% RTP/pick,
-// avg ≈92.5%. Row p = multipliers for catches 0..p (0 = no payout).
-export const KENO_PAYTABLE: Record<number, number[]> = {
-  1: [0, 3],
-  2: [0, 0, 15],
-  3: [0, 0, 2, 48],
-  4: [0, 0, 1, 7, 140],
-  5: [0, 0, 0, 2, 38, 500],
-  6: [0, 0, 0, 1, 11, 120, 1100],
-  7: [0, 0, 0, 0, 3, 35, 400, 8000],
-  8: [0, 0, 0, 0, 0, 21, 130, 1400, 10000],
-  9: [0, 0, 0, 0, 0, 0, 70, 700, 4000, 30000],
-  10: [0, 0, 0, 0, 0, 0, 0, 200, 3300, 25000, 60000],
-};
 
 export const ROULETTE_RED = [1, 3, 5, 8, 10, 12];
 export const ROULETTE_BLACK = [2, 4, 6, 7, 9, 11];

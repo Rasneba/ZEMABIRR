@@ -73,10 +73,12 @@ Common stake range for games: **min Br 1, max Br 10,000**.
 - Hitting a mine = lost. Revealing all safe tiles = cleared (won).
 - Cash-out requires ≥ 1 tile revealed.
 
-### 4.4 Keno (Fast / Classic / Turbo)
-- 40 numbers, 10 drawn. Pick 1–10 numbers. Bet range Br 1–10,000.
-- Payout table `KENO_PAYTABLE[picked][hits]` (see `src/lib/games.ts`); e.g.
-  pick 1 → 3.8× on hit; pick 10 → up to 1000×. House edge varies per pick
+### 4.4 Fast Keno
+- 80 numbers, 20 drawn. Pick 1–10 numbers. Bet range Br 1–10,000.
+- Round schedule: **30s betting** → **20s draw (1 ball/second)** → 4s results
+  (wall-clock rounds, provably fair seed commitment).
+- Payout table `FK_PAYTABLE[picked][hits]` (see `src/lib/fastkeno.ts`); e.g.
+  pick 1 → 3.8× on hit; pick 10 → up to 10000×. House edge varies per pick
   size and is embedded in the table.
 
 ### 4.5 Mini Roulette

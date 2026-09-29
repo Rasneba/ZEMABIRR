@@ -86,7 +86,8 @@ Browser ── fetch ──► /api/* route.ts ──► src/lib/* (business log
 | `/api/games/crash` | POST | Sky Jet / Avia Masters (start/cashout/poll) |
 | `/api/games/chicken` | POST | Chicken Road (start/step/resume/cashout) |
 | `/api/games/mines` | POST | Mines (start/reveal/resume/cashout) |
-| `/api/games/instant` | POST | Keno ×4 + Mini Roulette (one-shot) |
+| `/api/games/fast-keno` | POST | Fast Keno (round engine, 20s draw / 1 ball per sec) |
+| `/api/games/instant` | POST | Mini Roulette (one-shot) |
 | `/api/sports` | GET/POST | list/settle my bets, place bet |
 
 ## 3. Database (schema)
@@ -130,7 +131,7 @@ Every game is registered in the `GAMES` array and rendered by a JS engine in
 | crash  | `/api/games/crash` | active round + `crashPoint`/`startedAt`/`auto` |
 | chicken| `/api/games/chicken` | active round + `level`/`step` |
 | mines  | `/api/games/mines`  | active round + `mines[]`/`revealed[]` |
-| keno   | `/api/games/instant` | instant (no round resume) |
+| fastkeno| `/api/games/fast-keno` | live wall-clock round, state `{round, picks, drawMs}` |
 | roulette| `/api/games/instant`| instant |
 
 Rules for round-based games (`src/lib/rounds.ts`):
