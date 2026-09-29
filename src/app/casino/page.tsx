@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import GameCard from "@/components/GameCard";
 import { GAMES } from "@/lib/games";
 
-const CATS = ["All", "Crash", "Instant", "Keno", "Table"] as const;
+const CATS = ["All", "Crash", "Instant", "Keno", "Table", "Live"] as const;
 const SORTS = [
   { id: "featured", label: "Featured" },
   { id: "newest", label: "Newest" },

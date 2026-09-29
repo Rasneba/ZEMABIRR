@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="38%" r="90%">
+      <stop offset="0%" stop-color="#065f46"/>
+      <stop offset="100%" stop-color="#022c22"/>
+    </radialGradient>
+    <linearGradient id="c1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#e2e8f0"/>
+    </linearGradient>
+    <linearGradient id="p" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#0284c7"/>
+    </linearGradient>
+  </defs>
+  <rect width="1000" height="1000" fill="url(#bg)"/>
+  <ellipse cx="500" cy="470" rx="360" ry="230" fill="#052e16" stroke="#10b981" stroke-width="6" opacity="0.9"/>
+  <rect x="80" y="320" width="290" height="90" rx="18" fill="url(#p)" stroke="#0b1220" stroke-width="6"/>
+  <text x="225" y="380" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="#fff" text-anchor="middle">PLAYER</text>
+  <rect x="630" y="320" width="290" height="90" rx="18" fill="#be123c" stroke="#0b1220" stroke-width="6"/>
+  <text x="775" y="380" font-family="Arial, sans-serif" font-size="46" font-weight="bold" fill="#fff" text-anchor="middle">BANKER</text>
+  <g transform="rotate(-4 430 560)">
+    <rect x="270" y="420" width="260" height="360" rx="20" fill="url(#c1)" stroke="#0b1220" stroke-width="8"/>
+    <text x="400" y="700" font-family="Georgia, serif" font-size="130" font-weight="bold" fill="#dc2626" text-anchor="middle">9♠</text>
+  </g>
+  <g transform="rotate(5 640 580)">
+    <rect x="510" y="390" width="260" height="360" rx="20" fill="url(#c1)" stroke="#0b1220" stroke-width="8"/>
+    <text x="640" y="670" font-family="Georgia, serif" font-size="130" font-weight="bold" text-anchor="middle">7♥</text>
+  </g>
+</svg>

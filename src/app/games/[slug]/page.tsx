@@ -17,7 +17,7 @@ export default async function GamePage({ params }: { params: Promise<{ slug: str
   if (!game) notFound();
   return (
     <div>
-      <GameView slug={slug} spribeUrl={process.env.SPRIBE_AVIATOR_URL ?? ""} />
+      <GameView slug={slug} />
       <h2 className="mt-8 mb-3 text-lg font-bold">More games</h2>
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-7">
         {GAMES.filter((g) => g.slug !== slug).map((g) => <GameCard key={g.slug} game={g} />)}

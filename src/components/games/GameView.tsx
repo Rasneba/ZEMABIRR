@@ -17,7 +17,8 @@ const Roulette = dynamic(() => import("./Roulette"), { ssr: false });
 const Dice = dynamic(() => import("./Dice"), { ssr: false });
 const Plinko = dynamic(() => import("./Plinko"), { ssr: false });
 const Blackjack = dynamic(() => import("./Blackjack"), { ssr: false });
-import ExternalGame from "./ExternalGame";
+const Keno = dynamic(() => import("./Keno"), { ssr: false });
+const Baccarat = dynamic(() => import("./Baccarat"), { ssr: false });
 
 type Row = { id: number; bet: number; payout: number; multiplier: number; status: string; createdAt: string };
 
@@ -64,7 +65,7 @@ function MyBets({ slug }: { slug: string }) {
   );
 }
 
-export default function GameView({ slug, spribeUrl }: { slug: string; spribeUrl?: string }) {
+export default function GameView({ slug }: { slug: string }) {
   const game = getGame(slug);
   const { user } = useApp();
   if (!game) return null;
@@ -84,8 +85,9 @@ export default function GameView({ slug, spribeUrl }: { slug: string; spribeUrl?
       {game.engine === "plinko" && <Plinko game={game} />}
       {game.engine === "blackjack" && <Blackjack game={game} />}
       {game.engine === "roulette" && <Roulette game={game} />}
-      {game.engine === "external" && <ExternalGame url={spribeUrl} />}
-      {game.engine !== "external" && <MyBets key={user?.id ?? "anon"} slug={slug} />}
+      {game.engine === "keno" && <Keno game={game} />}
+      {game.engine === "baccarat" && <Baccarat game={game} />}
+      <MyBets key={user?.id ?? "anon"} slug={slug} />
     </div>
   );
 }

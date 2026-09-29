@@ -35,8 +35,10 @@ const GAME_LABELS: Record<string, string> = {
   "chicken-road": "Chicken Road",
   mines: "Mines",
   keno: "Keno",
+  "keno-atlas": "Keno Atlas",
   "fast-keno": "Fast Keno",
   "turbo-keno": "Turbo Keno",
+  baccarat: "Live Baccarat",
   "mini-roulette": "Mini Roulette",
   shamo: "Shamo Lootbox",
 };

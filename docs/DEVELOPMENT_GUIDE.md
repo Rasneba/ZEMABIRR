@@ -88,6 +88,8 @@ Browser ── fetch ──► /api/* route.ts ──► src/lib/* (business log
 | `/api/games/mines` | POST | Mines (start/reveal/resume/cashout) |
 | `/api/games/fast-keno` | POST | Fast Keno (round engine, 30s draw / 1 ball per 1.5s) |
 | `/api/games/instant` | POST | Mini Roulette (one-shot) |
+| `/api/games/keno` | POST | Keno Atlas / Keno (instant 80/20, pick 1–10) |
+| `/api/games/baccarat` | POST | Live Baccarat (instant 8-deck table) |
 | `/api/sports` | GET/POST | list/settle my bets, place bet |
 
 ## 3. Database (schema)
@@ -133,6 +135,8 @@ Every game is registered in the `GAMES` array and rendered by a JS engine in
 | mines  | `/api/games/mines`  | active round + `mines[]`/`revealed[]` |
 | fastkeno| `/api/games/fast-keno` | live wall-clock round, state `{round, picks, drawMs}` |
 | roulette| `/api/games/instant`| instant |
+| keno   | `/api/games/keno` | instant (classic Keno Atlas / Keno) |
+| baccarat| `/api/games/baccarat` | instant (8-deck, Player/Banker/Tie piles) |
 
 Rules for round-based games (`src/lib/rounds.ts`):
 1. One active round per game per user — starting when one exists is rejected

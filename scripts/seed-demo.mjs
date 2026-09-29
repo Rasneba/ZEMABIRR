@@ -25,7 +25,7 @@ const DAY = 86400000;
 
 const NAMES = ["abel", "sara", "dawit", "hanna", "yohannes", "meron", "kalkidan", "natnael", "bethlehem", "eyob", "selam", "miki", "robhi", "tsion", "daniel", "liya", "samuel", "genet", "biruk", "ayantu", "fikir", "henok", "marta", "yared", "hewan", "solomon", "rina", "teddy", "mahi", "jerry"];
 
-const GAMES = ["sky-jet", "chicken-road", "dice", "plinko", "blackjack", "babel-tower", "mines", "fast-keno", "mini-roulette", "shamo"];
+const GAMES = ["sky-jet", "chicken-road", "dice", "plinko", "blackjack", "babel-tower", "mines", "fast-keno", "keno-atlas", "keno", "baccarat", "mini-roulette", "shamo"];
 const METHODS = ["telebirr", "telebirr", "telebirr", "cbebirr", "mpesa", "usdt"];
 
 await q(`truncate users, sessions, transactions, game_rounds, promo_codes, promo_redemptions, sport_bets restart identity cascade`);

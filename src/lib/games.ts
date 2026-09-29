@@ -1,11 +1,11 @@
-export type GameEngine = "crash" | "mines" | "chicken" | "fastkeno" | "roulette" | "dice" | "plinko" | "blackjack" | "external";
+export type GameEngine = "crash" | "mines" | "chicken" | "fastkeno" | "roulette" | "dice" | "plinko" | "blackjack" | "keno" | "baccarat";
 
 export type Game = {
   slug: string;
   name: string;
   engine: GameEngine;
   image: string;
-  category: "Crash" | "Instant" | "Keno" | "Table";
+  category: "Crash" | "Instant" | "Keno" | "Table" | "Live";
   provider: string;
   badge?: "HOT" | "NEW" | "TOP";
   accent: string;
@@ -18,12 +18,15 @@ export const GAMES: Game[] = [
   { slug: "dice", name: "Dice", engine: "dice", image: "/games/dice.svg", category: "Instant", provider: "Zema Games Originals", badge: "HOT", accent: "#22d3ee" },
   { slug: "plinko", name: "Plinko", engine: "plinko", image: "/games/plinko.svg", category: "Instant", provider: "Zema Games Originals", badge: "NEW", accent: "#a855f7" },
   { slug: "blackjack", name: "Blackjack", engine: "blackjack", image: "/games/blackjack.svg", category: "Table", provider: "Zema Games Originals", badge: "TOP", accent: "#22c55e" },
+  { slug: "baccarat", name: "Live Baccarat", engine: "baccarat", image: "/games/baccarat.svg", category: "Live", provider: "Zema Games Originals", badge: "NEW", accent: "#eab308" },
   { slug: "babel-tower", name: "Babel Tower", engine: "mines", image: "/games/mines.jpg", category: "Instant", provider: "Zema Games Originals", accent: "#f97316" },
   { slug: "fast-keno", name: "Fast Keno", engine: "fastkeno", image: "/games/keno.jpg", category: "Keno", provider: "Zema Games Originals", badge: "HOT", accent: "#4cc27e" },
+  { slug: "keno-atlas", name: "Keno Atlas", engine: "keno", image: "/games/keno.jpg", category: "Keno", provider: "Zema Games Originals", badge: "NEW", accent: "#22c55e" },
+  { slug: "keno", name: "Keno", engine: "keno", image: "/games/keno.jpg", category: "Keno", provider: "Zema Games Originals", accent: "#2dd4bf" },
   { slug: "mines", name: "Mines", engine: "mines", image: "/games/mines.jpg", category: "Instant", provider: "Zema Games Originals", badge: "HOT", accent: "#14b8a6" },
   { slug: "mini-roulette", name: "Mini Roulette", engine: "roulette", image: "/games/roulette.jpg", category: "Table", provider: "Zema Games Originals", accent: "#16a34a" },
   { slug: "double-roulette", name: "Double Roulette", engine: "roulette", image: "/games/roulette.jpg", category: "Table", provider: "Zema Games Originals", accent: "#10b981" },
-  { slug: "spribe-aviator", name: "Aviator", engine: "external", image: "/games/avia.jpg", category: "Crash", provider: "Spribe", badge: "HOT", accent: "#f43f5e" },
+  { slug: "aviator", name: "Aviator", engine: "crash", image: "/games/avia.jpg", category: "Crash", provider: "Zema Games Originals", badge: "HOT", accent: "#f43f5e", crashTheme: "plane" },
 ];
 
 export const getGame = (slug: string) => GAMES.find((g) => g.slug === slug);
@@ -134,3 +137,22 @@ export function scoreHand(cards: string[]): number {
   for (let i = 0; i < aces; i++) sum += sum + 11 <= 21 ? 11 : 1;
   return sum;
 }
+
+// ---------- Baccarat ----------
+// 8 decks, standard third-card rules. A=1, 2–9 face value, 10/J/Q/K = 0.
+export const BAC_PLAYER = "player";
+export const BAC_BANKER = "banker";
+export const BAC_TIE = "tie";
+export const BAC_HANDS = [BAC_PLAYER, BAC_BANKER, BAC_TIE] as const;
+export type BacBet = (typeof BAC_HANDS)[number];
+
+export function bacValue(card: string): number {
+  const r = card.slice(0, -1);
+  if (r === "A") return 1;
+  if (["J", "Q", "K", "10"].includes(r) || r === "0") return 0;
+  return Number(r) % 10;
+}
+export function bacTotal(cards: string[]): number {
+  return cards.reduce((s, c) => (s + bacValue(c)) % 10, 0);
+}
+export const BAC_PAYOUTS: Record<BacBet, number> = { player: 1, banker: 0.95, tie: 8 };

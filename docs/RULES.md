@@ -81,6 +81,22 @@ Common stake range for games: **min Br 1, max Br 10,000**.
   pick 1 → 3.8× on hit; pick 10 → up to 10000×. House edge varies per pick
   size and is embedded in the table.
 
+### 4.4b Keno Atlas / Keno (classic instant keno)
+- Classic instant Keno (mirrors the Digitain "Keno Atlas-V" and "Keno" lobbies).
+  80 numbers, 20 drawn instantly, pick 1–10, bet Br 1–10,000 per round.
+- Payout table `KENO_PAYTABLE[picked][hits]` (see `src/lib/keno.ts`): pick 1 →
+  3.8×; pick 10 → up to 10,000×. RTP ≈ 96.5%, embedded in the table.
+- Runs on `/api/games/keno` and settles instantly via `instantRound`.
+
+### 4.4c Live Baccarat (instant table)
+- 8 decks, standard baccarat rules: naturals (8/9) stand; Player draws on
+  ≤5; Banker follows the full third-card table. Totals are mod-10.
+- Bet piles on **Player (pays 1:1)**, **Banker (pays 0.95:1)**, **Tie (pays 8:1)**;
+  per-pile min Br 1, total per round ≤ Br 20,000.
+- `win = Σ (winning pile · payout)`; `multiplier = win / total`. Settles
+  instantly on `/api/games/baccarat`. UI uses the mirrored Relum/RGS assets
+  (`public/rgs/`, loaded on the Baccarat page only).
+
 ### 4.5 Mini Roulette
 - Numbers 0–12; even-money bets pay 2:1; straight numbers pay **12:1**.
 - Total bet per round ≤ **Br 20,000**; per-spot min Br 1.
