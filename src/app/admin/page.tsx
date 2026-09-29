@@ -43,7 +43,7 @@ function AdminShell() {
 
   return (
     <div className="-mx-3 -mt-4 md:-mx-6">
-      <div className="sticky top-14 z-30 border-b border-line bg-side/95 backdrop-blur">
+      <div className="sticky top-0 z-30 border-b border-line bg-side/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3">
           <div className="flex items-center gap-2">
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gold font-black text-black">Z</span>

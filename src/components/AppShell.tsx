@@ -163,7 +163,13 @@ function Toasts() {
 }
 
 export default function AppShell({ children }: { children: ReactNode }) {
+  const path = usePathname();
   const [drawer, setDrawer] = useState(false);
+
+  // Admin is a standalone control panel: no player chrome (sidebar, top bar,
+  // bottom nav, footer, wallet/auth modals) — just login + panels.
+  if (path.startsWith("/admin")) return <>{children}</>;
+
   return (
     <div className="flex min-h-svh w-full">
       <aside className="fixed inset-y-0 left-0 z-20 hidden w-64 bg-side md:block">

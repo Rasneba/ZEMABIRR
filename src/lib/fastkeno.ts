@@ -7,7 +7,7 @@ export const FK = {
   draw: 20, // balls drawn per round
   maxPicks: 10, // numbers per ticket (1..10)
   betMs: 30_000, // betting window
-  drawMs: 20_000, // common draw duration: 20s for the 20-ball draw (1 ball every second)
+  drawMs: 30_000, // common draw duration: 30s for the 20-ball draw (1 ball every 1.5s)
   resultMs: 4_000, // results shown before next round
   minBet: 1,
   maxBet: 10_000,

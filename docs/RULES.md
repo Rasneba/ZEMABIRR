@@ -75,7 +75,7 @@ Common stake range for games: **min Br 1, max Br 10,000**.
 
 ### 4.4 Fast Keno
 - 80 numbers, 20 drawn. Pick 1–10 numbers. Bet range Br 1–10,000.
-- Round schedule: **30s betting** → **20s draw (1 ball/second)** → 4s results
+- Round schedule: **30s betting** → **30s draw (1 ball / 1.5s)** → 4s results
   (wall-clock rounds, provably fair seed commitment).
 - Payout table `FK_PAYTABLE[picked][hits]` (see `src/lib/fastkeno.ts`); e.g.
   pick 1 → 3.8× on hit; pick 10 → up to 10000×. House edge varies per pick

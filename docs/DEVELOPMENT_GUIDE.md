@@ -86,7 +86,7 @@ Browser ── fetch ──► /api/* route.ts ──► src/lib/* (business log
 | `/api/games/crash` | POST | Sky Jet / Avia Masters (start/cashout/poll) |
 | `/api/games/chicken` | POST | Chicken Road (start/step/resume/cashout) |
 | `/api/games/mines` | POST | Mines (start/reveal/resume/cashout) |
-| `/api/games/fast-keno` | POST | Fast Keno (round engine, 20s draw / 1 ball per sec) |
+| `/api/games/fast-keno` | POST | Fast Keno (round engine, 30s draw / 1 ball per 1.5s) |
 | `/api/games/instant` | POST | Mini Roulette (one-shot) |
 | `/api/sports` | GET/POST | list/settle my bets, place bet |
 

@@ -83,7 +83,7 @@ export default function GameView({ slug }: { slug: string }) {
       {game.engine === "plinko" && <Plinko game={game} />}
       {game.engine === "blackjack" && <Blackjack game={game} />}
       {game.engine === "roulette" && <Roulette game={game} />}
-      {game.engine !== "fastkeno" && <MyBets key={user?.id ?? "anon"} slug={slug} />}
+      <MyBets key={user?.id ?? "anon"} slug={slug} />
     </div>
   );
 }

@@ -63,9 +63,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const refresh = useCallback(async () => {
     const d = await api<{ user: User | null }>("/api/me");
+    if (d.error) return; // network blip — keep the current session
     setUser(d.user ?? null);
     setLoading(false);
   }, []);
+
+  // Live balance: poll every 2s while logged in so balances stay current on
+  // every page (settles finished Fast Keno rounds too).
+  useEffect(() => {
+    if (!user) return;
+    const t = setInterval(() => void refresh(), 2000);
+    return () => clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [Boolean(user)]);
 
   const toast = useCallback((text: string, kind: Toast["kind"] = "info") => {
     const id = Date.now() + Math.random();
