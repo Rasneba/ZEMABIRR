@@ -1,4 +1,4 @@
-export type GameEngine = "crash" | "mines" | "chicken" | "fastkeno" | "roulette" | "dice" | "plinko" | "blackjack";
+export type GameEngine = "crash" | "mines" | "chicken" | "fastkeno" | "roulette" | "dice" | "plinko" | "blackjack" | "external";
 
 export type Game = {
   slug: string;
@@ -23,9 +23,7 @@ export const GAMES: Game[] = [
   { slug: "mines", name: "Mines", engine: "mines", image: "/games/mines.jpg", category: "Instant", provider: "Zema Games Originals", badge: "HOT", accent: "#14b8a6" },
   { slug: "mini-roulette", name: "Mini Roulette", engine: "roulette", image: "/games/roulette.jpg", category: "Table", provider: "Zema Games Originals", accent: "#16a34a" },
   { slug: "double-roulette", name: "Double Roulette", engine: "roulette", image: "/games/roulette.jpg", category: "Table", provider: "Zema Games Originals", accent: "#10b981" },
-  { slug: "avia-masters", name: "Avia Masters", engine: "crash", image: "/games/avia.jpg", category: "Crash", provider: "Zema Games Originals", badge: "NEW", accent: "#0ea5e9", crashTheme: "jet" },
-  { slug: "rocket-rush", name: "Rocket Rush", engine: "crash", image: "/games/avia.jpg", category: "Crash", provider: "Zema Games Originals", accent: "#8b5cf6", crashTheme: "jet" },
-  { slug: "aviator", name: "Aviator", engine: "crash", image: "/games/avia.jpg", category: "Crash", provider: "Spribe", badge: "NEW", accent: "#f43f5e", crashTheme: "plane" },
+  { slug: "spribe-aviator", name: "Aviator", engine: "external", image: "/games/avia.jpg", category: "Crash", provider: "Spribe", badge: "HOT", accent: "#f43f5e" },
 ];
 
 export const getGame = (slug: string) => GAMES.find((g) => g.slug === slug);
